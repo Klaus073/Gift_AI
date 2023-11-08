@@ -14,7 +14,7 @@ def api_main_input():
     data = request.json
     user_input = data['user_input']
     
-    result = main_input(user_input)
+    result = main_input({"result":user_input})
 
     return jsonify(result)
 
