@@ -31,7 +31,7 @@ def initial_chat(user_input ):
                     
             """
                             Role:
-                            You are a conversational chatbot who is here to assist users in finding the perfect product based on their preferences and needs.\
+                            You are a conversational gift recommender chatbot who is here to assist users in finding the perfect product based on their preferences and needs.\
                             The primary focus is on engaging in conversations related to products'\
                             and guiding users through a series of questions to create a profile that will help you narrow down most suitable products names.\
                             Your role is to provide a seamless and user-friendly product recommendation experience.\
@@ -150,10 +150,50 @@ def example_response(ai_response):
     
     return attr
 
+def change_tone(ai_input):
+    
 
+    response_schemas = [
+    ResponseSchema(name="example", description="descriptive sentence")
+   ]
 
+    output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
+    format_instructions = output_parser.get_format_instructions()
+    
+    prompt2 = ChatPromptTemplate(
+    messages=[
+        HumanMessagePromptTemplate.from_template("""
+                                                "you will recieve the {ai_response}.\
+                                                 you job is to change the tone of the {ai_response} provided to you.\
+                                                 Tones:
+                                                 Excited
+                                                 Happy
+                                                 Joyful
+                                                 Emaotional
+                                                 Sensitive
+                                                 Respective
 
-json = {
+                                                 you will adjust the tones based on the context.
+                                                 sound like you are attatched to the user.
+
+                                                 Output:
+                                                 A complete sentence
+                                                 
+                                                 \n{format_instructions}\n{ai_response}
+        
+        """)
+            ],
+            input_variables = ["ai_response" ],
+            partial_variables={"format_instructions": format_instructions}
+        )
+    _input = prompt2.format_prompt(ai_response= ai_input )
+    output1 = llm(_input.to_messages())
+    attr = output_parser.parse(output1.content)
+    
+    return attr
+
+def get_products(product_item):
+    json = {
     "SearchResult": {
         "Items": [
             {
@@ -206,21 +246,32 @@ json = {
     }
 }
 
+    return json
 
-def output_filteration(output,parser1,parser2,json):
+
+def output_filteration(output,parser1,parser2):
+    output = change_tone(output)
     product = parser1.get('product')
     flag = parser1.get('flag')
-    example  = parser2.get('example')
+    example_response  = parser2.get('example')
+    print("example",example_response)
+    amazon = get_products(product)
+    example  = parser2.get('SearchResult')
+    json ={}
 
 
     if isinstance(product, list):
         product = ', '.join(product)
-    if flag:
+    if flag == "True":
         output = "Ok Let me Brain Storm some ideas .... "
-    json["result"] = output
-    json["example"] = example
+        json["Product"] = amazon
+        json["example"] = []
+        json["result"] = output
+    else:
+        json["result"] = output
+        json["example"] = example_response
     
-
+    print(json)
     return json
 
 def main_input(user_input):
@@ -228,7 +279,8 @@ def main_input(user_input):
     output = initial_chat(user_input)
     parser1 =  get_attributes(output)
     parser2 =  example_response(output)
-    final_output = output_filteration(output,parser1 , parser2  ,json)
+    # print("parser2",parser2)
+    final_output = output_filteration(output,parser1 , parser2  )
     print(final_output)
     
     return final_output   
