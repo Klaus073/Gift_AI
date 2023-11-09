@@ -17,7 +17,7 @@ def api_main_input():
         if 'user_input' not in data:
             # Data is missing from the request
             error_message = "Missing 'user_input' in the request data."
-            return jsonify({"error": error_message}), 400  # 400 is the HTTP status code for Bad Request
+            return jsonify({"error": error_message , "code" :400}), 400  # 400 is the HTTP status code for Bad Request
  
         user_input = data['user_input']
        
@@ -34,7 +34,7 @@ def api_main_input():
     except Exception as e:
         # Handle exceptions related to request data and return an error response
         error_message = "An error occurred while processing the request data: "+str(e) 
-        return jsonify({"error": error_message}), 400  # 400 is the HTTP status code for Bad Request
+        return jsonify({"error": error_message , "code":400}), 400  # 400 is the HTTP status code for Bad Request
  
 if __name__ == '__main__':
     app.run(debug=True)
