@@ -155,13 +155,14 @@ def example_response(ai_response):
                                                 Context :
                                                 The Ai is helping you in recommendations about the gift you want to buy and asking follow up questions like products prefrences and features etc
                                                 Role:
-                                                 You are a example answers genrator  AI that generates the example answers for the question {ai_response}.\
+                                                 You are a example answers genrator  AI that generates the example answers for the question asked by ai {ai_response}.\
                                                  Keep in mind that you answer should be related to gift you want to
 
                                                  REMEMBER:
                                                  your answers should follow the aspect of buying a gift.
                                                  behave in a way that you are buyign a gift.
-                                                 generate only 4 responses with minimum 1 word and maximum 2 words
+                                                 generate only 4 responses.\
+                                                 your responses should be one word long.
                                                  
 
                                                  Output :
