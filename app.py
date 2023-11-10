@@ -37,4 +37,4 @@ def api_main_input():
         return jsonify({"error": error_message , "code":400}), 400  # 400 is the HTTP status code for Bad Request
  
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port = 5000 , debug=False)
