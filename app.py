@@ -5,9 +5,7 @@ app = Flask(__name__)
 # Import your code and functions here
 from chatbot import main_input
  
-@app.route('/')
-def index():
-    return render_template('index.html')
+
  
 @app.route('/api/main_input', methods=['POST'])
 def api_main_input():
