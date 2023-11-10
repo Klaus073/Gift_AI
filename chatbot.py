@@ -32,15 +32,10 @@ def initial_chat(user_input ):
             """
                             Role:
                             
-                            
-
                             You are a conversational chatbot, Your name is "THINK GIFT" your  role would be that of a friendly and
                             knowledgeable gift advisor. You should focus on understanding the user's needs,
-                            the recipient's preferences, and the occasion for the gift. It should maintain a positive,
-                            engaged tone throughout, offering empathy and expertise. After gathering all relevant information,
-                            You should make a json representation report of all the information you gathered from inputs.
-
-                            
+                            the recipient's preferences, and the occasion for the gift. You should maintain a positive,
+                            engaged tone throughout, offering empathy and expertise.
 
                             Example Followup Questions:
                             1. What is the budget for the product?
@@ -50,22 +45,22 @@ def initial_chat(user_input ):
                             Steps to Follow:
                             1. Ask follow-up questions to understand the user's preferences and needs.\
                             2. Gather necessary information related to the products the user is interested in.\
-                            3. Once you've identified the product the user is looking for, provide the thme of top 3 products.\
+                            3. Once you've identified the product the user is looking for, provide the them top 3 products.\
                             
                             Purpose:
                             You are asking the followup questions to the user just to narrow down to a product.\
                             Which is then used to search for products o AMAZON.\
-                            So your Output should be a top 1 product.
+                            
 
                             Remember:
                             Your role is solely to recommend products.\
-                            If the user's input is related writing some like codes etc then politely decline and redirect the conversation towards product recommendations.\
+                            If the user's input is related writing something like codes etc then politely decline and redirect the conversation towards product recommendations.\
                             Use the set of questions provided to narrow down the product search.\
-                            If you have found the right product then just list the top 3 products only.
+                            
 
                             Output:
                             IF your response includes a list then format it as a list.
-                            When you narrow down the product search before prompting the product items prompt he user the information you collected toverify.\
+                            When you narrow down the product search before prompting the product items prompt he user the information you collected to verify.\
             """
         ),
         # The variable_name here is what must align with memory
@@ -103,25 +98,23 @@ def get_attributes(ai):
                     Let me provide you some example ai questions  and recommendation responses: 
                                                  
                     Example AI Questions:
-                    "Hello! How can I assist you today? Are you looking for gift recommendations?"
-                    "Hey there! I'm super excited to assist you today! Do you need any gift recommendations? I'm here to help!"
-                    "Of course! I can help you with that. Before we proceed, may I ask if you have any specific requirements or preferences for the iPhone 6? For example, do you have a preferred storage capacity or color?" 
-                    "Alright, no problem! One last question, do you have a budget in mind for the iPhone 6? This will help me find options that fit within your price range."
-                    "I understand that you may not have specific preferences at the moment. However, it would be helpful to gather some information to provide you with suitable gift recommendations. Could you please let me know the occasion for the gift and your budget?"
+                        "Hello! How can I assist you today? Are you looking for gift recommendations?"
+                        "Hey there! I'm super excited to assist you today! Do you need any gift recommendations? I'm here to help!"
+                        "Of course! I can help you with that. Before we proceed, may I ask if you have any specific requirements or preferences for the iPhone 6? For example, do you have a preferred storage capacity or color?" 
+                        "Alright, no problem! One last question, do you have a budget in mind for the iPhone 6? This will help me find options that fit within your price range."
+                        "I understand that you may not have specific preferences at the moment. However, it would be helpful to gather some information to provide you with suitable gift recommendations. Could you please let me know the occasion for the gift and your budget?"
                     
                     Example AI Recommendations: 
-                    "Apple Watch Series 6: The Apple Watch Series 6 is a stylish and functional smartwatch that offers a wide range of features, including fitness tracking, heart rate monitoring, and access to various apps. It makes for a great gift for someone who values both style and functionality.
-                    "Sony WH-1000XM4 Wireless Noise-Canceling Headphones: These headphones provide exceptional sound quality and industry-leading noise cancellation technology. They are perfect for anyone who loves music or enjoys a peaceful listening experience."
-                    "DJI Mavic Air 2 Drone: If the recipient is interested in photography or videography, the DJI Mavic Air 2 Drone is an excellent choice. It offers high-quality aerial imaging capabilities and intelligent flight modes, making it a great gift for adventure enthusiasts or photography enthusiasts"
-                     "Thank you for providing your budget. Based on that, I will now search for Brimstone costumes within your price range. Please give me a moment while I gather the information for you."                                            
+                        "Apple Watch Series 6: The Apple Watch Series 6 is a stylish and functional smartwatch that offers a wide range of features, including fitness tracking, heart rate monitoring, and access to various apps. It makes for a great gift for someone who values both style and functionality.
+                        "Sony WH-1000XM4 Wireless Noise-Canceling Headphones: These headphones provide exceptional sound quality and industry-leading noise cancellation technology. They are perfect for anyone who loves music or enjoys a peaceful listening experience."
+                        "DJI Mavic Air 2 Drone: If the recipient is interested in photography or videography, the DJI Mavic Air 2 Drone is an excellent choice. It offers high-quality aerial imaging capabilities and intelligent flight modes, making it a great gift for adventure enthusiasts or photography enthusiasts"
+                        "Thank you for providing your budget. Based on that, I will now search for Brimstone costumes within your price range. Please give me a moment while I gather the information for you."                                            
                                                                               
                                                                               
                     REMEMBER:
                         Rephrase {ai} in your words and identify yourself that either it is a question or a recommendation.\                        
                         
-                        
-                    Conditions:
-                                                 
+                    Conditions:                          
                         If it is recommendation and  Ai is recommending the products items then return the product in ai response .\
                         if it is recommendation then set flag 'True; else set it to 'False'.\
                         if it is identified that it is a recommendation then also extract information about featues of the product.\
@@ -160,9 +153,9 @@ def example_response(ai_response):
 
                                                  REMEMBER:
                                                  your answers should follow the aspect of buying a gift.
-                                                 behave in a way that you are buyign a gift.
+                                                 behave in a way that you are buying a gift.
                                                  generate only 4 responses.\
-                                                 your responses should be one word long.
+                                                 
                                                  
 
                                                  Output :
@@ -196,12 +189,12 @@ def change_tone(ai_input):
         HumanMessagePromptTemplate.from_template(
                                                 """
                                                 "you will recieve the {ai_response}.\
-                                                 you job is to change the tone of the {ai_response} provided to you.\
+                                                 your job is to change the tone of the {ai_response} provided to you.\
                                                  
                                                 REMEMBER:
                                                  you will adjust the tones based on the context.
-                                                 use the example and learn from then and adapt the similar tone.
-                                                 use emojis in the reponse to make it exciting.\
+                                                
+                                                 use emojis in the response to make it exciting.\
 
                                                  Output:
                                                  A complete sentence
