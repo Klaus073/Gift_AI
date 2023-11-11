@@ -4,12 +4,16 @@ from flask import Flask, request, jsonify, render_template, session
 from flask_session import Session
 from session_utils import init_session, get_user_session_id
 from flask_cors import CORS
-
+import secrets
+from dotenv import load_dotenv
+load_dotenv()
+import os
 app = Flask(__name__)
 CORS(app)
-app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback_secret_key')
+
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_COOKIE_NAME'] = 'unique_session_cookie_name'
+app.config['SESSION_COOKIE_NAME'] = os.environ.get('SESSION_COOKIE_NAME', 'fallback_session_cookie_name')
 Session(app)
 
 # Import other necessary modules and libraries
@@ -23,8 +27,8 @@ api_key = os.environ.get("OPENAI_API_KEY")
 
 # Route for the home page
 @app.route('/')
-def index():
-    return render_template('index.html')
+def get_status():
+    return jsonify(message="Running")
 
 # API endpoint for handling user inputs
 @app.route('/api/main_input', methods=['POST'])
