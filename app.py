@@ -30,6 +30,11 @@ api_key = os.environ.get("OPENAI_API_KEY")
 def get_status():
     return jsonify(message="Running")
 
+@app.route('/api/delete_session', methods=['POST'])
+def delete_session():
+    session.clear()  # Clear the session data
+    return jsonify({"message": "Session deleted"}), 200
+
 # API endpoint for handling user inputs
 @app.route('/api/main_input', methods=['POST'])
 def api_main_input():
@@ -50,7 +55,7 @@ def api_main_input():
 
         try:
             # Retrieve or initialize the user's chat data
-            # user_chat_data = session.get(f'user_chat_data_{user_session_id}', [])
+            user_chat_data = session.get(f'user_chat_data_{user_session_id}', [])
 
             # Process the user input using your chatbot
             # output = manager.main_input(user_input, user_session_id)
@@ -58,20 +63,20 @@ def api_main_input():
             output = main_input(user_input, user_session_id)
 
             # Update the user's chat data
-            # user_chat_data.append({"input": user_input, "output": output})
-            # session[f'user_chat_data_{user_session_id}'] = user_chat_data
+            user_chat_data.append({"input": user_input, "output": output})
+            session[f'user_chat_data_{user_session_id}'] = user_chat_data
 
-            return jsonify({"result": output })
+            return jsonify({"result": output})
 
         except Exception as e:
             # Handle exceptions from main_input and return an error response
-            error_message = "An error occurred while processing the request: " 
+            error_message = "An error occurred while processing the request: " +(str(e))
             return jsonify({"error": error_message, "code": 500}), 500
 
     except Exception as e:
         # Handle exceptions related to request data and return an error response
-        error_message = "An error occurred while processing the request data: " 
+        error_message = "An error occurred while processing the request data: " +(str(e))
         return jsonify({"error": error_message, "code": 400}), 400
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=4000, debug=True)
+    app.run(host='0.0.0.0', port=4000,debug=True)
