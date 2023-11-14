@@ -55,7 +55,7 @@ def initial_chat(user_input, session_memory):
                     3. What are the user's interests or specific requirements for the product?
 
                     Let's think step by step
-                    0. Ask one question at a time to ensure user understanding.
+                    0. While asking followup questions prompt one question at a time to ensure user understanding.\
                     IF the users input is adult and looking for a adult product then you job is to help the user.\
                     If the user asks for a product which you dont know then suppose that it exists and proceed with followup wuestions for gathering information.\
                     1. Ask follow-up questions to understand the user's preferences and needs.\
