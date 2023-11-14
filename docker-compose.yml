@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  flaskapp:
+    image: flaskapp-image
+    container_name: flaskapp-container
+    ports:
+      - "5000:4000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
