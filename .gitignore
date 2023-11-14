@@ -2,3 +2,5 @@ myenv/
 flask_session/
 .env
 session_utils.py
+__pycache__/
+
