@@ -1,6 +1,6 @@
 # app.py
 
-from flask import Flask, render_template, jsonify, request, session
+from flask import Flask, render_template, jsonify, request
 
 from flask_cors import CORS
 from chatbot import main_input
