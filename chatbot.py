@@ -318,7 +318,7 @@ def output_filteration(output, parser1, parser2, user_session_id, user_input):
         json["example"] = []
         json["result"] = output
     else:
-        json["Product"] = []
+        json["Product"] = [{}]
         json["result"] = output
         json["example"] = example_response
 
