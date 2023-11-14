@@ -1,22 +1,13 @@
 # app.py
 
-from flask import Flask, request, jsonify, render_template, session
-from flask_session import Session
-from session_utils import init_session, get_user_session_id
+from flask import Flask, render_template, jsonify, request
+
 from flask_cors import CORS
-import secrets
-from dotenv import load_dotenv
-load_dotenv()
+from chatbot import main_input
 import os
+
 app = Flask(__name__)
 CORS(app)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback_secret_key')
-
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_COOKIE_NAME'] = os.environ.get('SESSION_COOKIE_NAME', 'fallback_session_cookie_name')
-Session(app)
-
-# Import other necessary modules and libraries
 
 from chatbot import main_input
 import os
@@ -36,41 +27,26 @@ def api_main_input():
     try:
         data = request.json
 
-        if 'user_input' not in data:
+        if 'user_input' not in data and 'session_id' not in data:
             # Data is missing from the request
             error_message = "Missing 'user_input' in the request data."
             return jsonify({"error": error_message, "code": 400}), 400
 
         user_input = data['user_input']
-
-        # Use the user's session ID as a key for their chat data
-        init_session()
-        user_session_id = get_user_session_id()
-        
+        session_id = data['session_id']
 
         try:
-            # Retrieve or initialize the user's chat data
-            # user_chat_data = session.get(f'user_chat_data_{user_session_id}', [])
-
-            # Process the user input using your chatbot
-            # output = manager.main_input(user_input, user_session_id)
-            # print("sdfs",user_session_id)
-            output = main_input(user_input, user_session_id)
-
-            # Update the user's chat data
-            # user_chat_data.append({"input": user_input, "output": output})
-            # session[f'user_chat_data_{user_session_id}'] = user_chat_data
-
-            return jsonify({"result": output })
+            output = main_input(user_input, session_id)
+            return jsonify({"result": output})
 
         except Exception as e:
             # Handle exceptions from main_input and return an error response
-            error_message = "An error occurred while processing the request: " 
+            error_message = "An error occurred while processing the request: " + str(e)
             return jsonify({"error": error_message, "code": 500}), 500
 
     except Exception as e:
         # Handle exceptions related to request data and return an error response
-        error_message = "An error occurred while processing the request data: " 
+        error_message = "An error occurred while processing the request data: " + str(e)
         return jsonify({"error": error_message, "code": 400}), 400
 
 if __name__ == "__main__":
