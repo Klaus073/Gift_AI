@@ -109,7 +109,7 @@ def get_attributes(ai):
             HumanMessagePromptTemplate.from_template(
                 """
                 Role:
-                   As an expert text analyzer, my job is to understand and analyze AI responses, distinguishing between whether they are recommendations or questions about a product.\
+                   As a skilled text analyzer, your task is to figure out if the responses are suggestions or questions about a product.\
 
                 AI Response :{ai}
 
@@ -368,7 +368,11 @@ def output_filteration(output, parser1, parser2 ,session_id):
         output = change_tone( output)
         output = output.get('sentence')
 
-        sub = product_response(product)
+        try:
+            sub = product_response(product)
+        except Exception as e:
+            # print(f"An exception occurred: {str(e)}")
+            sub = {}
         # print("perfect subcategory: " , sub)
         # print(output)
         
