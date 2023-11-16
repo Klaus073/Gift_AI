@@ -309,12 +309,6 @@ def get_products( product ):
     return result
     
 
-
-
-    
-
-
-
 def output_filteration(output, parser1, parser2 ,session_id):
     
     output = change_tone( output)
@@ -353,9 +347,6 @@ def output_filteration(output, parser1, parser2 ,session_id):
         except Exception as e:
             print("error from amazon",e)
 
-
-        
-        
         json["Product"] = amazon
         json["example"] = []
         json["result"] = output
