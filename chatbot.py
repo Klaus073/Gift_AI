@@ -11,6 +11,8 @@ from langchain.memory import ConversationBufferMemory
 from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 import json
 
+from search_items import getitems
+
 api_key = os.environ.get('OPENAI_API_KEY')
 llm = ChatOpenAI(openai_api_key=api_key)
 memory_dict = {}
@@ -53,14 +55,15 @@ def initial_chat(user_input, session_memory):
                     1. What is the budget for the product?
                     2. Who is the intended recipient of the product?
                     3. What are the user's interests or specific requirements for the product?
+                    4. what is the user or recipient's age?
 
                     Let's think step by step
-                    0. While asking followup questions prompt one question at a time to ensure user understanding.\
+                    0. While asking followup questions prompt one question at a time to ensure user understanding.
                     IF the users input is adult and looking for a adult product then you job is to help the user.\
                     If the user asks for a product which you dont know then suppose that it exists and proceed with followup wuestions for gathering information.\
                     1. Ask follow-up questions to understand the user's preferences and needs.\
                     2. Gather necessary information related to the products the user is interested in.\
-                    3. Prompt the user the details and things you learned from them about the product and propmpt top 3 products along with data collected from user.\
+                    3. Prompt the user the details and things you learned from them about the product and propmpt top 1 products along with data collected from user.\
                     
 
                     Purpose:
@@ -96,7 +99,7 @@ def initial_chat(user_input, session_memory):
 def get_attributes(ai):
     
     response_schemas = [
-        ResponseSchema(name="product", description="list of product"),
+        ResponseSchema(name="product name", description="name of product item"),
         ResponseSchema(name="flag", description="bool value true or false"),
         ResponseSchema(name="features", description="a dictionary with keys and values of features")
     ]
@@ -108,36 +111,53 @@ def get_attributes(ai):
         messages=[
             HumanMessagePromptTemplate.from_template(
                 """
-                Role:
-                   As a skilled text analyzer, your task is to figure out if the responses are suggestions or questions about a product.\
+                **Role:**
+                - Imagine you're a skilled text analyzer determining if responses suggest questions or product recommendations.
+                - AI Response: {ai}
+                - Observe AI asking questions and providing recommendations.
 
-                AI Response :{ai}
+                **Examples of AI Questions about Products:**
+                1. "Hello! Are you looking for gift recommendations?"
+                2. "Hey! Do you need any gift recommendations?"
+                3. "Before we proceed, do you have specific requirements for the iPhone 6?"
+                4. "One last question, do you have a budget for the iPhone 6?"
+                5. "Could you let me know the occasion and budget for the gift?"
+                6. "Hello! How can I assist you today? Are you looking for a gift for someone special?"
+                7. "That's lovely! A piece of jewelry can be a perfect gift for a spouse. Now, could you please let me know your budget for the jewelry? Knowing the budget will help me suggest options that align with your preferences."
 
-                Let's look at some examples of AI asking questions and giving product recommendations.\
+                **Examples of AI Product Recommendations:**
+                1. "Apple Watch Series 6: Stylish and functional smartwatch with fitness tracking."
+                2. "Sony WH-1000XM4 Wireless Headphones: Exceptional sound quality and noise cancellation."
+                3. "DJI Mavic Air 2 Drone: Excellent for photography or videography enthusiasts."
+                4. "I will search for Brimstone costumes within your budget."
 
                 
-                Examples of AI Questions about Products:
-                1. "Hello! How can I assist you today? Are you looking for gift recommendations?"
-                2. "Hey there! I'm super excited to assist you today! Do you need any gift recommendations? I'm here to help!"
-                3. "Of course! I can help you with that. Before we proceed, may I ask if you have any specific requirements or preferences for the iPhone 6? For example, do you have a preferred storage capacity or color?"
-                4. "Alright, no problem! One last question, do you have a budget in mind for the iPhone 6? This will help me find options that fit within your price range."
-                5. "I understand that you may not have specific preferences at the moment. However, it would be helpful to gather some information to provide you with suitable gift recommendations. Could you please let me know the occasion for the gift and your budget?"
 
-                Examples of AI Product Recommendations:
-                1. "Apple Watch Series 6: The Apple Watch Series 6 is a stylish and functional smartwatch that offers a wide range of features, including fitness tracking, heart rate monitoring, and access to various apps. It makes for a great gift for someone who values both style and functionality.
-                2. "Sony WH-1000XM4 Wireless Noise-Canceling Headphones: These headphones provide exceptional sound quality and industry-leading noise cancellation technology. They are perfect for anyone who loves music or enjoys a peaceful listening experience."
-                3. "DJI Mavic Air 2 Drone: If the recipient is interested in photography or videography, the DJI Mavic Air 2 Drone is an excellent choice. It offers high-quality aerial imaging capabilities and intelligent flight modes, making it a great gift for adventure enthusiasts or photography enthusiasts"
-                4. "Thank you for providing your budget. Based on that, I will now search for Brimstone costumes within your price range. Please give me a moment while I gather the information for you."
+                Let's systematically approach the task:
 
-                REMEMBER:
+                ### 1. Response Examination
+                - Carefully analyze the provided response.
+                - Rephrase the content in your own words.
+                - Assess whether it primarily involves inquiring about the user's product preferences or providing a product recommendation or asking recommendations questions.
 
-                Rephrase {ai} in your words and identify yourself that either it is a question or a recommendation.\                        
+                ### 2. Flag Establishment
+                - Introduce a binary flag to capture AI behavior.
+                - When the AI suggests products, treat it as a recommendation.
+                - Set the flag to 'True' exclusively when the AI is making a product recommendation; otherwise, set it to 'False.'
 
-                Let's think step by step:
-                1. If the AI response suggests specific products, treat it as a recommendation and return those products in the AI response.
-                2. Set the flag to 'True' if the AI response is a recommendation; otherwise, set it to 'False.'
-                3. If the AI response is identified as a recommendation, extract information about the features of the product, such as budget, color, etc.
-                4. Return the values of these features in a dictionary with corresponding value pairs.                        
+                ### 3. Recommendation Details
+                - If the AI is indeed recommending a product, proceed to the next step.
+                - Extract specific product features, such as budget and color.
+
+                ### 4. Return Values
+                - Systematically organize the extracted feature values into a dictionary.
+                - Ensure each feature is paired with its corresponding value.
+
+                ### 5. Reflection
+                - Reflect on the stepwise process.
+                - Offer insights into each stage of the analysis. 
+
+                                      
 
                     \n{format_instructions}\n{ai}
 
@@ -166,21 +186,22 @@ def example_response( ai_response):
         messages=[
             HumanMessagePromptTemplate.from_template(
                 """
-                Context :
-                The Ai is helping you in recommendations about the gift you want to buy and asking follow up questions like products preferences and features etc
-                Role:
-                 You are an example answers generator  AI that generates the example answers for the question {ai_response}.\
-                 Keep in mind that your answer should be related to the gift you want to
+                **Context:**
+                - Collaborating with an AI gift recommender.
+                - AI inquires about gift preferences.
 
-                 REMEMBER:
-                 your answers should follow the aspect of buying a gift.
-                 behave in a way that you are buying a gift.
-                 generate only 4 responses with a minimum of 1 word and a maximum of 2 words.
+                *Role:*
+                - You are the AI demonstrating example answers for {ai_response}.
+                - Immerse the model in the role of a gift buyer.
 
+                *Instructions:*
+                - Your response cannot be a question.
+                - Exhibit responses akin to the process of selecting and purchasing a gift.
+                - Demonstrate how to consider preferences and features when choosing a gift.
+                - Craft only 4 responses, each spanning 1 to 2 words.
 
-                 Output :
-                 generate only 4 responses with a minimum of 1 word and a maximum of 2 words.
-                 Only return 4 responses as a list of strings.
+                *Output:*
+                - Provide a list of 4 responses, each containing 1 to 2 words.
                 \n{format_instructions}\n{ai_response}
 
                 """
@@ -252,27 +273,23 @@ def product_response( product):
     prompt2 = ChatPromptTemplate(
         messages=[
             HumanMessagePromptTemplate.from_template(
-                """
-                Role:
-                In your AI shoes, think of yourself as the helpful guide. \
-                Your mission? Assist users in discovering the perfect category and its subcategory for three provided products. from the given categories and sub categories \
-                Just like a friendly sidekick, carefully analyze the products and match it up with the provided category and its  subcategories.\
-                
-                Products = {product}
-                Category and their Subcategories = {category}
+               """
+                *Role:*
+                - Picture yourself as an AI guide, assisting users in finding the perfect category and subcategory for three products.
+                - Your mission is to thoughtfully analyze the products and align them with the provided categories and subcategories.
 
-                Steps to Follow:
-                
-                Firstly findout the main category of the provided three products from the Category and their Subcategories dictionary.\
-                Secondly find out that under which category that products lies.\
-                Thirdly Return the main category of the provided products and the subcategory of the provided category.\
+                *Products:* {product}
+                *Categories and Subcategories:* {category}
 
-                Output:
-                Your output will contain only 1 main category and its 1 subcategory.\
+                *Let's Think Step by Step:*
+                1. First, carefully identify the main category of the three provided products from the Category and their Subcategories dictionary.
+                2. Next, determine under which subcategory those products specifically belong.
+                3. Lastly, return the main category of the provided products and the subcategory of the identified category.
 
-                
-                Output Format:
-                Provide the result in the form of a dictionary, including keys and values denoting category and subcategory.\
+                *Output:*
+                - Your output should be a dictionary containing one main category and its corresponding subcategory.
+                - If there is no subcategory for the main category then just return the main category.
+
                 
                 \n{format_instructions}\n{product}
                 """
@@ -287,62 +304,14 @@ def product_response( product):
 
     return attr
 
-def get_products( product_item):
+def get_products( product , category):
+    result = getitems(product , category)
+    return result
     
-    json = {
-        "SearchResult": {
-            "Items": [
-                {
-                    "ASIN": "0545162076",
-                    "DetailPageURL": "https://www.amazon.com/dp/0545162076?tag=dgfd&linkCode=osi",
-                    "Images": {
-                        "Primary": {
-                            "Medium": {
-                                "Height": 134,
-                                "URL": "https://m.media-amazon.com/images/I/51BBTJaU6QL.SL160.jpg",
-                                "Width": 160
-                            }
-                        }
-                    },
-                    "ItemInfo": {
-                        "Title": {
-                            "DisplayValue": "Harry Potter Paperback Box Set (Books 1-7)",
-                            "Label": "Title",
-                            "Locale": "en_US"
-                        }
-                    },
-                    "Offers": {
-                        "Listings": [
-                            {
-                                "Condition": {
-                                    "DisplayValue": "nuevo",
-                                    "Label": "Condición",
-                                    "Locale": "es_US",
-                                    "Value": "New"
-                                },
-                                "Id": "l2dKMJRrPVX3O7DAPQ6DWLXBjBeRYsruAnKVf1LNXyjFTUw%2FnNBn41CJV2489iPYMSGuynW8uuwMQ7GhGrcT9F%2F%2FgO5bdp%2B2l0HbPvvHy05ASCdqrOaxWA%3D%3D",
-                                "Price": {
-                                    "Amount": 52.16,
-                                    "Currency": "USD",
-                                    "DisplayAmount": "$52.16",
-                                    "Savings": {
-                                        "Amount": 34.77,
-                                        "Currency": "USD",
-                                        "DisplayAmount": "$34.77 (40%)",
-                                        "Percentage": 40
-                                    }
-                                }
-                            }
-                        ]
-                    }
-                }
-            ],
-            "SearchURL": "https://www.amazon.com/s/?field-keywords=Harry+Potter&search-alias=aps&tag=dgfd&linkCode=osi",
-            "TotalResultCount": 146
-        }
-    }
+    
+    
 
-    return json
+    
 
 
 
@@ -351,11 +320,11 @@ def output_filteration(output, parser1, parser2 ,session_id):
     output = change_tone( output)
     output = output.get('sentence')
     
-    product = parser1.get('product')
+    product = parser1.get('product name')
     flag = parser1.get('flag')
     example_response = parser2.get('example')
 
-    amazon = get_products( product)
+    
     example = parser2.get('SearchResult')
     json = {}
 
@@ -372,9 +341,18 @@ def output_filteration(output, parser1, parser2 ,session_id):
             sub = product_response(product)
         except Exception as e:
             # print(f"An exception occurred: {str(e)}")
-            sub = {}
+            sub = {"Category":"" ,"Subcategory" : "" }
+        
         # print("perfect subcategory: " , sub)
         # print(output)
+        amazon = get_products( product , sub["Category"])
+        try:
+            amazon = get_products( product , sub["Category"])
+        except Exception as e:
+            print("error from amazon",e)
+
+
+        
         
         json["Product"] = amazon
         json["example"] = []
@@ -388,84 +366,24 @@ def output_filteration(output, parser1, parser2 ,session_id):
 
     return json
 
-
-# def output_filteration(output, parser1, parser2, session_id):
-#     try:
-#         # Handle output
-#         output = change_tone(output)
-#         output = output.get('sentence')
-
-#     except Exception as output_exception:
-#         print(f"An error occurred while processing 'output': {output_exception}")
-#         output = None
-
-#     try:
-#         # Handle parser1
-#         product = parser1.get('product')
-#         flag = parser1.get('flag')
-
-#     except Exception as parser1_exception:
-#         print(f"An error occurred while processing 'parser1': {parser1_exception}")
-#         product = None
-#         flag = None
-
-#     try:
-#         # Handle parser2
-#         example_response = parser2.get('example')
-
-#     except Exception as parser2_exception:
-#         print(f"An error occurred while processing 'parser2': {parser2_exception}")
-#         example_response = None
-
-#     try:
-#         # Handle session_id
-#         session_id = str(session_id)
-
-#     except Exception as session_id_exception:
-#         print(f"An error occurred while processing 'session_id': {session_id_exception}")
-#         session_id = None
-
-#     try:
-#         # Continue with the remaining code
-#         amazon = get_products(product)
-#         example = parser2.get('SearchResult')
-#         json = {}
-
-#         if isinstance(product, list):
-#             product = ', '.join(product)
-
-#         if flag == "True":
-#             output = "Ok Let me Brain Storm some ideas .... "
-#             output = change_tone(output)
-#             output = output.get('sentence')
-
-#         if flag == "True":
-#             sub = product_response(product)
-#             print("perfect subcategory: ", sub)
-
-#             json["Product"] = amazon
-#             json["example"] = []
-#             json["result"] = output
-#             json["session_id"] = session_id
-#         else:
-#             json["result"] = output
-#             json["example"] = example_response
-#             json["session_id"] = session_id
-
-#         return json
-
-#     except Exception as final_exception:
-#         print(f"An error occurred in the final processing: {final_exception}")
-#         return {"error": str(final_exception)}
-
-
 def main_input(user_input, user_session_id):
     session_memory = get_or_create_memory_for_session(user_session_id)
-    output = initial_chat(user_input, session_memory )
+    # output = initial_chat(user_input, session_memory )
+    try:
+        output = initial_chat(user_input, session_memory )
+    except Exception as e:
+        output = {"error": "Something Went Wrong ...." , "code": "500"}
+        return output
     
+    try:
+        parser1 = get_attributes( output)
+    except Exception as e:
+        parser1 = {"product": "" , "flag": "" , "features": {}}
+    try:
+        parser2 = example_response( output)
+    except Exception as e:
+        parser2 = {"example": []}
 
-    parser1 = get_attributes( output)
-    parser2 = example_response( output)
     # print(output)
     # print(parser1)
     # print(parser2)
@@ -474,24 +392,3 @@ def main_input(user_input, user_session_id):
 
     return final_output
 
-# print(main_input("hello world" , "asdasdasd"))
-
-# if name == "main":
-#     api_key = os.environ.get("OPENAI_API_KEY")
-#     user_input = "hello amigo"
-#     user_session_id = "some_unique_session_id"  # Replace with the actual session ID
-#     result = main_input(api_key, user_input, user_session_id)
-#     print(result)
-
-
-# ss  = """
-# Thank you for providing the budget. With a budget of $100 or more, you have a variety of options for a golf-themed gift for your dad. Here are three top recommendations:
-
-# 1. Titleist Pro V1 Golf Balls: These premium golf balls are highly regarded for their quality and performance. They provide excellent distance, control, and durability, making them a favorite among golfers. Your dad will appreciate the exceptional feel and performance of these balls.
-
-# 2. Callaway Golf Men's Strata Complete Set: If your dad is in need of a new set of golf clubs, this complete set from Callaway is an excellent choice. It includes a driver, fairway wood, hybrid, irons, and a putter, all designed to provide forgiveness and distance. It's a fantastic option for golfers of all skill levels.
-
-# 3. Garmin Approach S10 Golf Watch: This sleek and functional golf watch is perfect for keeping track of distances, hazards, and scorekeeping on the golf course. It offers precise yardages to the front, back, and middle of the green, helping your dad improve his game. It's a stylish and practical gift for any golf enthusiast.
-# """
-# output = change_tone( ss)
-# print(output)
