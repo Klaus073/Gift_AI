@@ -339,7 +339,7 @@ def output_filteration(output, parser1, parser2 ,session_id):
             # print(f"An exception occurred: {str(e)}")
             sub = {"Category":"" ,"Subcategory" : "" }
         
-        print("perfect subcategory: " , sub)
+        # print("perfect subcategory: " , sub)
         # print(output)
         # amazon = get_products( product , sub["Category"])
         try:
