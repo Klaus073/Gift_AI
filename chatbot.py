@@ -305,11 +305,11 @@ def product_response( product):
     return attr
 
 def get_products( product ):
-    result = getitems(product )
+    result = getitems(product)
     return result
     
-    
-    
+
+
 
     
 
@@ -323,9 +323,11 @@ def output_filteration(output, parser1, parser2 ,session_id):
     product = parser1.get('product name')
     flag = parser1.get('flag')
     example_response = parser2.get('example')
+    if example_response == ['']:
+        example_response = []
 
     
-    example = parser2.get('SearchResult')
+    
     json = {}
 
     if isinstance(product, list):
@@ -343,11 +345,11 @@ def output_filteration(output, parser1, parser2 ,session_id):
             # print(f"An exception occurred: {str(e)}")
             sub = {"Category":"" ,"Subcategory" : "" }
         
-        # print("perfect subcategory: " , sub)
+        print("perfect subcategory: " , sub)
         # print(output)
         # amazon = get_products( product , sub["Category"])
         try:
-            amazon = get_products( product )
+            amazon = get_products( product)
         except Exception as e:
             print("error from amazon",e)
 
@@ -382,7 +384,7 @@ def main_input(user_input, user_session_id):
     try:
         parser2 = example_response( output)
     except Exception as e:
-        parser2 = {"example": []}
+        parser2 = {"example": ['']}
 
     # print(output)
     # print(parser1)
