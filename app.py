@@ -10,8 +10,8 @@ CORS(app)
 
 # Route for the home page
 @app.route('/')
-def index():
-    return render_template('index.html')
+def get_status():
+    return jsonify(message="Running")
 
 @app.route('/api/main_input', methods=['POST'])
 def api_main_input():
