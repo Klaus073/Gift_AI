@@ -45,7 +45,7 @@ def search_items(product):
     search_items_resource = [
         SearchItemsResource.ITEMINFO_TITLE,
         SearchItemsResource.OFFERS_LISTINGS_PRICE,
-        SearchItemsResource.IMAGES_PRIMARY_MEDIUM,
+        SearchItemsResource.IMAGES_PRIMARY_LARGE,
         SearchItemsResource.ITEMINFO_BYLINEINFO,
         SearchItemsResource.ITEMINFO_FEATURES,
         SearchItemsResource.OFFERS_LISTINGS_AVAILABILITY_MESSAGE
