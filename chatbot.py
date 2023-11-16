@@ -304,8 +304,8 @@ def product_response( product):
 
     return attr
 
-def get_products( product , category):
-    result = getitems(product , category)
+def get_products( product ):
+    result = getitems(product )
     return result
     
     
@@ -345,9 +345,9 @@ def output_filteration(output, parser1, parser2 ,session_id):
         
         # print("perfect subcategory: " , sub)
         # print(output)
-        amazon = get_products( product , sub["Category"])
+        # amazon = get_products( product , sub["Category"])
         try:
-            amazon = get_products( product , sub["Category"])
+            amazon = get_products( product )
         except Exception as e:
             print("error from amazon",e)
 
