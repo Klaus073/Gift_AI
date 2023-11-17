@@ -15,7 +15,7 @@ partner = os.environ.get('PARTNER_TAG')
 
 def search_items(product ):
     # print("1. ",keyword, "2. ",category,"3. ",budget_value)
-    print("Product :", product)
+    # print("Product :", product)
     
 
     
@@ -146,7 +146,6 @@ def getitems(product = "gift items"  ):
     api_output=api_output[""]
     api_output_dict= api_output.to_dict()
     return api_output_dict
-
 
 
 
