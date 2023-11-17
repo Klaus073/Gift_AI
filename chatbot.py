@@ -57,13 +57,29 @@ def initial_chat(user_input, session_memory):
                     3. What are the user's interests or specific requirements for the product?
                     4. what is the user or recipient's age?
 
-                    Let's think step by step
-                    0. While asking followup questions prompt one question at a time to ensure user understanding.
-                    IF the users input is adult and looking for a adult product then you job is to help the user.\
-                    If the user asks for a product which you dont know then suppose that it exists and proceed with followup wuestions for gathering information.\
-                    1. Ask follow-up questions to understand the user's preferences and needs.\
-                    2. Gather necessary information related to the products the user is interested in.\
-                    3. Prompt the user the details and things you learned from them about the product and propmpt top 1 products along with data collected from user.\
+                    **Guidance for Smart Product Inquiry:**
+
+                    **0. Ensure User Understanding:**
+                    - When asking follow-up questions, prompt one question at a time to ensure user comprehension.
+                    - If the user's input indicates an adult and a search for adult products, assist the user accordingly.
+                    - If the user requests a product unfamiliar to you, assume it exists, and proceed with follow-up questions to gather information.
+
+                    **1. Follow-up Questioning with Record:**
+                    - Engage in a series of follow-up questions to thoroughly understand the user's preferences and needs.
+                    - Keep a record of previously answered questions to avoid redundancy.
+                    - Prioritize one question at a time to enhance clarity.
+
+                    **2. Gather Information:**
+                    - Collect necessary information related to the products the user is interested in.
+                    - Ensure a comprehensive understanding of their requirements.
+
+                    **3. User Prompt and Product Recommendations:**
+                    - Before asking a follow-up question, check the record to avoid redundancy.
+                    - Prompt the user with details and insights gathered about the product during the inquiry.
+                    - Propose the top-ranked product, along with data collected from the user.
+                    - Offer a personalized and informed recommendation based on the user's input.
+                    - Your response should be concise and short.
+
                     
 
                     Purpose:
@@ -260,6 +276,49 @@ def change_tone( ai_input):
     attr = output_parser.parse(output1.content)
 
     return attr
+
+
+def conversation_title( conversation):
+    
+    response_schemas = [
+        ResponseSchema(name="Title", description="title of conversation ")
+    ]
+
+    output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
+    format_instructions = output_parser.get_format_instructions()
+
+    prompt2 = ChatPromptTemplate(
+        messages=[
+            HumanMessagePromptTemplate.from_template(
+                """
+                **Role:**
+                - Visualize yourself as an AI specialized in crafting concise conversation titles.
+                - summarize the human messages from conversation anf give it a title
+
+                conversation = {conversation}
+
+                
+
+                
+
+                **Example Output:**
+                    Return the title as a string
+
+                 \n{format_instructions}\n{conversation}
+
+    """
+            )
+        ],
+        input_variables=["conversation"],
+        partial_variables={"format_instructions": format_instructions}
+    )
+    _input = prompt2.format_prompt(conversation=conversation)
+    output1 = llm(_input.to_messages())
+    title = output_parser.parse(output1.content)
+
+    return title
+
+
 # sub_categories =['Kindle Kids', 'Kindle Paperwhite', 'Kindle Oasis', 'Kindle Books', 'Camera & Photo', 'Headphones', 'Video Game Consoles & Accessories', 'Wearable Technology', 'Cell Phones & Accessories', 'Computer Accessories & Peripherals', 'Monitors', 'Laptop Accessories', 'Data Storage', 'Amazon Smart Home', 'Smart Home Lighting', 'Smart Locks and Entry', 'Security Cameras and Systems', 'Painting, Drawing & Art Supplies', 'Beading & Jewelry Making', 'Crafting', 'Sewing', 'Car Care', 'Car Electronics & Accessories', 'Exterior Accessories', 'Interior Accessories', 'Motorcycle & Powersports', 'Activity & Entertainment', 'Apparel & Accessories', 'Baby & Toddler Toys', 'Nursery', 'Travel Gear', 'Makeup', 'Skin Care', 'Hair Care', 'Fragrance', 'Foot, Hand & Nail Care', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Handbags', 'Clothing', 'Shoes', 'Watches', 'Accessories', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Handbags', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Health Care', 'Household Supplies', 'Vitamins & Dietary Supplements', 'Wellness & Relaxation', 'Kitchen & Dining', 'Bedding', 'Bath', 'Furniture', 'Home Décor', 'Wall Art', 'Carry-ons', 'Backpacks', 'Garment bags', 'Travel Totes', 'Dogs', 'Cats', 'Fish & Aquatic Pets', 'Birds', 'Sports and Outdoors', 'Outdoor Recreation', 'Sports & Fitness', 'Tools & Home Improvement', 'Appliances', 'Building Supplies', 'Electrical', 'Action Figures & Statues', 'Arts & Crafts', 'Baby & Toddler Toys', 'Building Toys', 'Video Games', 'PlayStation', 'Xbox', 'Nintendo', 'PC', 'All gift cards', 'eGift cards', 'Gift cards by mail', 'Specialty gift cards']
 
 def product_response( product):
@@ -310,38 +369,25 @@ def get_products( product ):
     
 
 
-# 127.0.0.1 - - [16/Nov/2023 16:17:03] "OPTIONS /api/main_input HTTP/1.1" 200 -
-# Great! With a budget of $1000, you have plenty of options for a special wedding gift. Based on the preferences and information you provided, I have found a wonderful gift idea for you.
 
-# I recommend considering a luxurious piece of jewelry, such as a diamond necklace or a pair of earrings. Jewelry is a timeless and elegant gift that symbolizes love and commitment. It can be something that your girlfriend can cherish for 
-# a lifetime.
+def output_filteration(output_old, parser1, parser2 ,session_id):
+    
+    try:
+        output = change_tone( output_old)
+        output = output.get('sentence')
+    except Exception as e:
+        output = output_old
 
-# You can choose from various styles, such as classic, modern, or vintage, depending on your girlfriend's taste. It's also a great opportunity to personalize the gift by adding her birthstone or a special engraving.
-
-# With your budget, you have the flexibility to select a high-quality piece from well-known brands like Tiffany & Co., Cartier, or Harry Winston.
-
-# I hope this suggestion aligns with your expectations and budget. Let me know if you'd like more information or if you have any other preferences that I can consider while searching for the perfect wedding gift.
-# {'product name': 'luxurious piece of jewelry', 'flag': 'true', 'features': {'budget': '$1000', 'styles': ['classic', 'modern', 'vintage'], 'brands': ['Tiffany & Co.', 'Cartier', 'Harry Winston']}}
-# {'example': []}
 
     
 
-
-
-def output_filteration(output, parser1, parser2 ,session_id):
-    
-    output = change_tone( output)
-    output = output.get('sentence')
-    
     product = parser1.get('product name')
-    
     flag = parser1.get('flag')
+
     example_response = parser2.get('example')
     if example_response == ['']:
         example_response = []
 
-    
-    
     json = {}
 
     if isinstance(product, list):
@@ -349,39 +395,49 @@ def output_filteration(output, parser1, parser2 ,session_id):
     
     
     if flag == "True" or flag == "true":
-        output = "Ok Let me Brain Storm some ideas .... "
-        output = change_tone( output)
-        output = output.get('sentence')
+        try:
+            output = "Ok Let me Brain Storm some ideas .... "
+            output = change_tone( output)
+            output = output.get('sentence')
+        except Exception as e:
+            output = "Ok Let me Brain Storm some ideas .... "
 
         try:
             sub = product_response(product)
         except Exception as e:
-            # print(f"An exception occurred: {str(e)}")
             sub = {"Category":"" ,"Subcategory" : "" }
 
         if product == '':
             product ='gift'
         
-        # print("perfect subcategory: " , sub)
-        # print(output)
-        # amazon = get_products( product , sub["Category"])
+        print("perfect subcategory: " , sub)
+
+        try:
+            title = conversation_title(memory_dict[session_id].buffer)
+            new = title.get('Title')
+        except Exception as e:
+            new = None
+        print("title :",new)
+        
         try:
             amazon = get_products( product)
         except Exception as e:
             print("error from amazon",e)
 
 
-        
-        
         json["Product"] = amazon
         json["example"] = []
         json["result"] = output
         json["session_id"] = session_id
+        json["Title"] = new
+
     else:
+
         json["Product"] = {}
         json["result"] = output
         json["example"] = example_response
         json["session_id"] = session_id
+        # json["Title"] = "None"
 
     return json
 
@@ -403,9 +459,9 @@ def main_input(user_input, user_session_id):
     except Exception as e:
         parser2 = {"example": ['']}
 
-    # print(output)
-    # print(parser1)
-    # print(parser2)
+    print(output)
+    print(parser1)
+    print(parser2)
 
     final_output = output_filteration( output, parser1, parser2, user_session_id)
 
