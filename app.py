@@ -1,27 +1,18 @@
-# app.py
 
-from flask import Flask, render_template, jsonify, request
-
+from flask import Flask, render_template, jsonify, request, session
 from flask_cors import CORS
+
 from chatbot import main_input
 import os
 
 app = Flask(__name__)
 CORS(app)
 
-from chatbot import main_input
-import os
-
-# Initialize ConversationManager
-api_key = os.environ.get("OPENAI_API_KEY")
-# manager = ConversationManager(api_key)
-
 # Route for the home page
 @app.route('/')
 def get_status():
     return jsonify(message="Running")
 
-# API endpoint for handling user inputs
 @app.route('/api/main_input', methods=['POST'])
 def api_main_input():
     try:
