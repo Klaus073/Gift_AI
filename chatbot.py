@@ -410,14 +410,14 @@ def output_filteration(output_old, parser1, parser2 ,session_id):
         if product == '':
             product ='gift'
         
-        print("perfect subcategory: " , sub)
+        # print("perfect subcategory: " , sub)
 
         try:
             title = conversation_title(memory_dict[session_id].buffer)
             new = title.get('Title')
         except Exception as e:
             new = None
-        print("title :",new)
+        # print("title :",new)
         
         try:
             amazon = get_products( product)
@@ -459,9 +459,9 @@ def main_input(user_input, user_session_id):
     except Exception as e:
         parser2 = {"example": ['']}
 
-    print(output)
-    print(parser1)
-    print(parser2)
+    # print(output)
+    # print(parser1)
+    # print(parser2)
 
     final_output = output_filteration( output, parser1, parser2, user_session_id)
 
