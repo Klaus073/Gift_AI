@@ -13,8 +13,10 @@ secret = os.environ.get('SECRET_KEY')
 partner = os.environ.get('PARTNER_TAG')
 
 
-def search_items(product , category ):
+def search_items(product ):
     # print("1. ",keyword, "2. ",category,"3. ",budget_value)
+    # print("Product :", product)
+    
 
     
     access_key = access
@@ -31,9 +33,9 @@ def search_items(product , category ):
 
     """ Specify the category in which search request is to be made """
     """ For more details, refer: https://webservices.amazon.com/paapi5/documentation/use-cases/organization-of-items-on-amazon/search-index.html """
-    if category == "":
-        category = "All"
-    search_index = category
+    # if category == "":
+    #     category = "All"
+    search_index ="All"
 
    
 
@@ -45,7 +47,7 @@ def search_items(product , category ):
     search_items_resource = [
         SearchItemsResource.ITEMINFO_TITLE,
         SearchItemsResource.OFFERS_LISTINGS_PRICE,
-        SearchItemsResource.IMAGES_PRIMARY_MEDIUM,
+        SearchItemsResource.IMAGES_PRIMARY_LARGE,
         SearchItemsResource.ITEMINFO_BYLINEINFO,
         SearchItemsResource.ITEMINFO_FEATURES,
         SearchItemsResource.OFFERS_LISTINGS_AVAILABILITY_MESSAGE
@@ -124,12 +126,6 @@ def search_items(product , category ):
     return response
 
 
-
-    
-
-
-
-
 def simplify_json(json_obj):
     result = {}
  
@@ -145,12 +141,11 @@ def simplify_json(json_obj):
     return result
  
  
-def getitems(product = "gift items" , category = "All" ):
-    api_output = simplify_json(search_items(product , category))
+def getitems(product = "gift items"  ):
+    api_output = simplify_json(search_items(product ))
     api_output=api_output[""]
     api_output_dict= api_output.to_dict()
     return api_output_dict
-
 
 
 

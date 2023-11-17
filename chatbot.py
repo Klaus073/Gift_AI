@@ -304,12 +304,25 @@ def product_response( product):
 
     return attr
 
-def get_products( product , category):
-    result = getitems(product , category)
+def get_products( product ):
+    result = getitems(product)
     return result
     
-    
-    
+
+
+# 127.0.0.1 - - [16/Nov/2023 16:17:03] "OPTIONS /api/main_input HTTP/1.1" 200 -
+# Great! With a budget of $1000, you have plenty of options for a special wedding gift. Based on the preferences and information you provided, I have found a wonderful gift idea for you.
+
+# I recommend considering a luxurious piece of jewelry, such as a diamond necklace or a pair of earrings. Jewelry is a timeless and elegant gift that symbolizes love and commitment. It can be something that your girlfriend can cherish for 
+# a lifetime.
+
+# You can choose from various styles, such as classic, modern, or vintage, depending on your girlfriend's taste. It's also a great opportunity to personalize the gift by adding her birthstone or a special engraving.
+
+# With your budget, you have the flexibility to select a high-quality piece from well-known brands like Tiffany & Co., Cartier, or Harry Winston.
+
+# I hope this suggestion aligns with your expectations and budget. Let me know if you'd like more information or if you have any other preferences that I can consider while searching for the perfect wedding gift.
+# {'product name': 'luxurious piece of jewelry', 'flag': 'true', 'features': {'budget': '$1000', 'styles': ['classic', 'modern', 'vintage'], 'brands': ['Tiffany & Co.', 'Cartier', 'Harry Winston']}}
+# {'example': []}
 
     
 
@@ -321,11 +334,14 @@ def output_filteration(output, parser1, parser2 ,session_id):
     output = output.get('sentence')
     
     product = parser1.get('product name')
+    
     flag = parser1.get('flag')
     example_response = parser2.get('example')
+    if example_response == ['']:
+        example_response = []
 
     
-    example = parser2.get('SearchResult')
+    
     json = {}
 
     if isinstance(product, list):
@@ -342,12 +358,15 @@ def output_filteration(output, parser1, parser2 ,session_id):
         except Exception as e:
             # print(f"An exception occurred: {str(e)}")
             sub = {"Category":"" ,"Subcategory" : "" }
+
+        if product == '':
+            product ='gift'
         
         # print("perfect subcategory: " , sub)
         # print(output)
-        amazon = get_products( product , sub["Category"])
+        # amazon = get_products( product , sub["Category"])
         try:
-            amazon = get_products( product , sub["Category"])
+            amazon = get_products( product)
         except Exception as e:
             print("error from amazon",e)
 
@@ -382,7 +401,7 @@ def main_input(user_input, user_session_id):
     try:
         parser2 = example_response( output)
     except Exception as e:
-        parser2 = {"example": []}
+        parser2 = {"example": ['']}
 
     # print(output)
     # print(parser1)
