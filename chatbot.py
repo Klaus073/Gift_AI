@@ -6,17 +6,26 @@ from langchain.prompts import (
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
+from langchain.callbacks import get_openai_callback
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 import json
-
+import tiktoken
+from count_tokens import extract_token_stats
 from search_items import getitems
 
 api_key = os.environ.get('OPENAI_API_KEY')
-llm = ChatOpenAI(openai_api_key=api_key)
+llm = ChatOpenAI(openai_api_key=api_key , temperature=0)
 memory_dict = {}
-
+global_token_stats = {
+    "total_tokens_used": 0,
+    "prompt_tokens_used": 0,
+    "completion_tokens_used": 0,
+    "successful_requests": 0,
+    "total_cost_usd": 0.0,
+}
+COUNTER = 0
 
 # Get the absolute path to the directory of the script or notebook
 current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -26,6 +35,12 @@ file_path = os.path.join(current_directory, 'data', 'Categories_and_Subcategorie
 
 with open(file_path, 'r') as file:
     data = json.load(file)
+    
+def num_tokens_from_string(string: str, encoding_name: str) -> int:
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.get_encoding(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
 
 def get_or_create_memory_for_session(session_id):
     if session_id not in memory_dict:
@@ -34,69 +49,60 @@ def get_or_create_memory_for_session(session_id):
 
 def initial_chat(user_input, session_memory):
     
+    global COUNTER  # Add this line if you want to modify the global variable
+    COUNTER = COUNTER + 1
     prompt_rough = ChatPromptTemplate(
         messages=[
             SystemMessagePromptTemplate.from_template(
                 """
-                    Role:
+                    **Role:**
+- Embody the persona of "THINK GIFT," a friendly assistant dedicated to helping users discover the perfect gift.
+- Engage users in lively conversations, posing follow-up questions, and understanding their gift preferences.
+- Maintain a positive and helpful tone, playing the role of a virtual gift advisor.
 
-                    You're a friendly chatbot called "THINK GIFT." Your job is to help people find the perfect gift.\
-                    Be nice, ask questions about what they're looking for, who it's for, and the occasion. \
-                    Keep a positive and helpful tone. You're like a virtual gift advisor!\
-                    
-                    Tone:
-                    Generate responses in a warm, friendly, and helpful tone. \
-                    Begin by expressing enthusiasm and interest in the user's input or topic. \
-                    If applicable, ask open-ended questions to gather more details. \
-                    Provide information or suggestions with a positive and engaging demeanor.\
-                    
+**Example Follow-up Questions:**
+1. What budget range are you considering for the gift?
+2. Who is the lucky recipient of the gift?
+3. Share any specific interests or requirements for the product.
+4. Could you provide the age of the user or recipient?
 
-                    Example Followup Questions:
-                    1. What is the budget for the product?
-                    2. Who is the intended recipient of the product?
-                    3. What are the user's interests or specific requirements for the product?
-                    4. what is the user or recipient's age?
+**Let's Do It Step by Step:**
 
-                    **Guidance for Smart Product Inquiry:**
+**1. Ensure User Understanding:**
+- Ask one follow-up question at a time to maintain a conversational flow.
+- Avoid a strict one-question-at-a-time structure but limit the number of questions asked per interaction to one.
+- If a user's input suggests adult preferences, offer assistance accordingly.
+- Assume the existence of a user-requested unfamiliar product, proceeding with information gathering.
 
-                    **0. Ensure User Understanding:**
-                    - When asking follow-up questions, prompt one question at a time to ensure user comprehension.
-                    - If the user's input indicates an adult and a search for adult products, assist the user accordingly.
-                    - If the user requests a product unfamiliar to you, assume it exists, and proceed with follow-up questions to gather information.
+**2. Follow-up Questioning with Record:**
+- Engage in follow-up questions to understand user preferences.
+- Keep a record of the previous response to guide the conversation.
+- Emphasize clarity but allow flexibility in the conversation.
 
-                    **1. Follow-up Questioning with Record:**
-                    - Engage in a series of follow-up questions to thoroughly understand the user's preferences and needs.
-                    - Keep a record of previously answered questions to avoid redundancy.
-                    - Prioritize one question at a time to enhance clarity.
+**3. Gather Information:**
+- Collect necessary information about the product the user is interested in.
+- If the budget response is vague, kindly ask for a specific range.
+- Ensure a comprehensive understanding of their requirements.
 
-                    **2. Gather Information:**
-                    - Collect necessary information related to the products the user is interested in.
-                    - Ensure a comprehensive understanding of their requirements.
+**4. User Interaction Conclusion:**
+- Conclude by summarizing the product name and user's preferences, including the budget.
+- If the user mentions the budget during the conversation, include it in the final output.
+- Recommend one product based on the gathered information.
 
-                    **3. User Prompt and Product Recommendations:**
-                    - Before asking a follow-up question, check the record to avoid redundancy.
-                    - Prompt the user with details and insights gathered about the product during the inquiry.
-                    - Propose the top-ranked product, along with data collected from the user.
-                    - Offer a personalized and informed recommendation based on the user's input.
-                    - Your response should be concise and short.
+**Purpose:**
+- Inquire about user preferences for recommending suitable gifts.
+- Utilize gathered information to search for gifts on Amazon.
+- Clearly state the product name and user preferences in responses.
 
-                    
+**Remember:**
+- Focus on recommending products while asking one question at a time.
+- Maintain a conversational tone.
+- If the conversation deviates, politely steer it back to product recommendations.
+- Use the provided questions as a guide but allow flexibility for varied responses.
 
-                    Purpose:
-                    You're asking more questions to help figure out exactly what kind of gift the person wants. \
-                    This information is then used to look for gifts on Amazon. \
-                    What you say back should clearly state the name of the product, \
-                    preferences the user mentioned, like budget, color, model, brand, whatever you gather for that product.\
 
-                    Remember:
-                    Your role is solely to recommend products.\
-                    If the user's input is related writing some like codes etc then politely decline and redirect the conversation towards product recommendations.\
-                    Use the set of questions provided to narrow down the product search.\
-                    
 
-                    Output:
-                    Prompt stating the product name , user's preferences like budget(must), color, model, brand, etc. Be concise and clear.
-                    IF the user has mentioned its budget while answering the questions then must prompt the budget with you final output.\
+
                 """
             ),
             MessagesPlaceholder(variable_name="chat_history"),
@@ -109,11 +115,26 @@ def initial_chat(user_input, session_memory):
         verbose=False,
         memory=session_memory
     )
-    conversation({"question": user_input})
+    with get_openai_callback() as cb:
+        result = conversation({"question": user_input})
+        # print(type(cb))
+        token_info = {
+        "total_tokens_used": cb.total_tokens,
+        "prompt_tokens_used": cb.prompt_tokens,
+        "completion_tokens_used": cb.completion_tokens,
+        "successful_requests": cb.successful_requests,
+        "total_cost_usd": cb.total_cost,
+    }
+
+
+    # Update global token stats
+    for key in global_token_stats:
+        global_token_stats[key] += token_info[key]
     return session_memory.buffer[-1].content
 
 def get_attributes(ai):
-    
+    global COUNTER  # Add this line if you want to modify the global variable
+    COUNTER = COUNTER + 1
     response_schemas = [
         ResponseSchema(name="product name", description="name of product item"),
         ResponseSchema(name="flag", description="bool value true or false"),
@@ -149,7 +170,7 @@ def get_attributes(ai):
 
                 
 
-                Let's systematically approach the task:
+                 Let's systematically approach the task:
 
                 ### 1. Response Examination
                 - Carefully analyze the provided response.
@@ -184,13 +205,29 @@ def get_attributes(ai):
         partial_variables={"format_instructions": format_instructions}
     )
     _input = prompt2.format_prompt(ai=ai)
-    output1 = llm(_input.to_messages())
-    attr = output_parser.parse(output1.content)
+    with get_openai_callback() as cb:
+        result = llm(_input.to_messages())
+        # print("get attributes",cb)
+        token_info = {
+        "total_tokens_used": cb.total_tokens,
+        "prompt_tokens_used": cb.prompt_tokens,
+        "completion_tokens_used": cb.completion_tokens,
+        "successful_requests": cb.successful_requests,
+        "total_cost_usd": cb.total_cost,
+    }
+
+
+    # Update global token stats
+    for key in global_token_stats:
+        global_token_stats[key] += token_info[key]
+    # output1 = llm(_input.to_messages())
+    attr = output_parser.parse(result.content)
 
     return attr
 
 def example_response( ai_response):
-    
+    global COUNTER  # Add this line if you want to modify the global variable
+    COUNTER = COUNTER + 1
     response_schemas = [
         ResponseSchema(name="example", description="list of strings of example responses")
     ]
@@ -202,22 +239,34 @@ def example_response( ai_response):
         messages=[
             HumanMessagePromptTemplate.from_template(
                 """
-                **Context:**
-                - Collaborating with an AI gift recommender.
-                - AI inquires about gift preferences.
+               **Role:**
+                - You are the AI demonstrating example answers for follow-up questions related to gift preferences.
+                - Assume the role of a virtual gift advisor providing concise and relevant responses.
 
-                *Role:*
-                - You are the AI demonstrating example answers for {ai_response}.
-                - Immerse the model in the role of a gift buyer.
+                **Let's Do It Step by Step:**
 
-                *Instructions:*
-                - Your response cannot be a question.
-                - Exhibit responses akin to the process of selecting and purchasing a gift.
-                - Demonstrate how to consider preferences and features when choosing a gift.
-                - Craft only 4 responses, each spanning 1 to 2 words.
+                **Step 1: Understand the Task**
+                - Dive into the task of generating very concise responses for follow-up questions, strictly within the 1 to 2-word limit.
+                - Focus on providing helpful and contextually relevant answers in this limited format.
 
-                *Output:*
-                - Provide a list of 4 responses, each containing 1 to 2 words.
+                **Step 2: Clarity is Key**
+                - Emphasize clear and relevant responses, adhering strictly to the 1 to 2-word limit.
+                - Tailor examples to align with the context of gift preferences.
+                - Encourage the model to provide specific and concise answers.
+
+                **Step 3: Output**
+                - Generate only four responses, each consisting of 1 to 2 words, for follow-up questions.
+                - Ensure the responses are clear and directly address the context of gift preferences.
+
+                **Purpose:**
+                - Generate a limited set of four sample responses that strictly adhere to the 1 to 2-word limit, effectively addressing user queries about gift preferences.
+
+                **Remember:**
+                - Provide exactly four responses in total.
+                - Prioritize extreme brevity within the 1 to 2-word limit.
+                - Encourage the model to provide very concise yet helpful responses.
+                - Maintain a conversational tone in the generated answers.
+
                 \n{format_instructions}\n{ai_response}
 
                 """
@@ -227,13 +276,29 @@ def example_response( ai_response):
         partial_variables={"format_instructions": format_instructions}
     )
     _input = prompt2.format_prompt(ai_response=ai_response)
-    output1 = llm(_input.to_messages())
-    attr = output_parser.parse(output1.content)
+    # output1 = llm(_input.to_messages())
+    with get_openai_callback() as cb:
+        result = llm(_input.to_messages())
+        # print("get attributes",cb)
+        token_info = {
+        "total_tokens_used": cb.total_tokens,
+        "prompt_tokens_used": cb.prompt_tokens,
+        "completion_tokens_used": cb.completion_tokens,
+        "successful_requests": cb.successful_requests,
+        "total_cost_usd": cb.total_cost,
+    }
+
+
+    # Update global token stats
+    for key in global_token_stats:
+        global_token_stats[key] += token_info[key]
+    attr = output_parser.parse(result.content)
 
     return attr
 
 def change_tone( ai_input):
-    
+    global COUNTER  # Add this line if you want to modify the global variable
+    COUNTER = COUNTER + 1
     response_schemas = [
         ResponseSchema(name="sentence", description="descriptive sentence ")
     ]
@@ -272,14 +337,31 @@ def change_tone( ai_input):
         partial_variables={"format_instructions": format_instructions}
     )
     _input = prompt2.format_prompt(ai_response=ai_input)
-    output1 = llm(_input.to_messages())
-    attr = output_parser.parse(output1.content)
+    # output1 = llm(_input.to_messages())
+    # attr = output_parser.parse(output1.content)
+    with get_openai_callback() as cb:
+        result = llm(_input.to_messages())
+        # print("get attributes",cb)
+        token_info = {
+        "total_tokens_used": cb.total_tokens,
+        "prompt_tokens_used": cb.prompt_tokens,
+        "completion_tokens_used": cb.completion_tokens,
+        "successful_requests": cb.successful_requests,
+        "total_cost_usd": cb.total_cost,
+    }
+
+
+    # Update global token stats
+    for key in global_token_stats:
+        global_token_stats[key] += token_info[key]
+    attr = output_parser.parse(result.content)
 
     return attr
 
 
 def conversation_title( conversation):
-    
+    global COUNTER  # Add this line if you want to modify the global variable
+    COUNTER = COUNTER + 1
     response_schemas = [
         ResponseSchema(name="Title", description="title of conversation ")
     ]
@@ -313,8 +395,24 @@ def conversation_title( conversation):
         partial_variables={"format_instructions": format_instructions}
     )
     _input = prompt2.format_prompt(conversation=conversation)
-    output1 = llm(_input.to_messages())
-    title = output_parser.parse(output1.content)
+    # output1 = llm(_input.to_messages())
+    # title = output_parser.parse(output1.content)
+    with get_openai_callback() as cb:
+        result = llm(_input.to_messages())
+        # print("get attributes",cb)
+        token_info = {
+        "total_tokens_used": cb.total_tokens,
+        "prompt_tokens_used": cb.prompt_tokens,
+        "completion_tokens_used": cb.completion_tokens,
+        "successful_requests": cb.successful_requests,
+        "total_cost_usd": cb.total_cost,
+    }
+
+
+    # Update global token stats
+    for key in global_token_stats:
+        global_token_stats[key] += token_info[key]
+    title = output_parser.parse(result.content)
 
     return title
 
@@ -322,7 +420,8 @@ def conversation_title( conversation):
 # sub_categories =['Kindle Kids', 'Kindle Paperwhite', 'Kindle Oasis', 'Kindle Books', 'Camera & Photo', 'Headphones', 'Video Game Consoles & Accessories', 'Wearable Technology', 'Cell Phones & Accessories', 'Computer Accessories & Peripherals', 'Monitors', 'Laptop Accessories', 'Data Storage', 'Amazon Smart Home', 'Smart Home Lighting', 'Smart Locks and Entry', 'Security Cameras and Systems', 'Painting, Drawing & Art Supplies', 'Beading & Jewelry Making', 'Crafting', 'Sewing', 'Car Care', 'Car Electronics & Accessories', 'Exterior Accessories', 'Interior Accessories', 'Motorcycle & Powersports', 'Activity & Entertainment', 'Apparel & Accessories', 'Baby & Toddler Toys', 'Nursery', 'Travel Gear', 'Makeup', 'Skin Care', 'Hair Care', 'Fragrance', 'Foot, Hand & Nail Care', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Handbags', 'Clothing', 'Shoes', 'Watches', 'Accessories', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Handbags', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Health Care', 'Household Supplies', 'Vitamins & Dietary Supplements', 'Wellness & Relaxation', 'Kitchen & Dining', 'Bedding', 'Bath', 'Furniture', 'Home Décor', 'Wall Art', 'Carry-ons', 'Backpacks', 'Garment bags', 'Travel Totes', 'Dogs', 'Cats', 'Fish & Aquatic Pets', 'Birds', 'Sports and Outdoors', 'Outdoor Recreation', 'Sports & Fitness', 'Tools & Home Improvement', 'Appliances', 'Building Supplies', 'Electrical', 'Action Figures & Statues', 'Arts & Crafts', 'Baby & Toddler Toys', 'Building Toys', 'Video Games', 'PlayStation', 'Xbox', 'Nintendo', 'PC', 'All gift cards', 'eGift cards', 'Gift cards by mail', 'Specialty gift cards']
 
 def product_response( product):
-    
+    global COUNTER  # Add this line if you want to modify the global variable
+    COUNTER = COUNTER + 1
     response_schemas = [
         ResponseSchema(name="Category", description="a key value of most relevant category and sub category")]
 
@@ -358,8 +457,24 @@ def product_response( product):
         partial_variables={"format_instructions": format_instructions}
     )
     _input = prompt2.format_prompt(product=product , category = data)
-    output1 = llm(_input.to_messages())
-    attr = output_parser.parse(output1.content)
+    # output1 = llm(_input.to_messages())
+    # attr = output_parser.parse(output1.content)
+    with get_openai_callback() as cb:
+        result = llm(_input.to_messages())
+        # print("get attributes",cb)
+        token_info = {
+        "total_tokens_used": cb.total_tokens,
+        "prompt_tokens_used": cb.prompt_tokens,
+        "completion_tokens_used": cb.completion_tokens,
+        "successful_requests": cb.successful_requests,
+        "total_cost_usd": cb.total_cost,
+    }
+
+
+    # Update global token stats
+    for key in global_token_stats:
+        global_token_stats[key] += token_info[key]
+    attr = output_parser.parse(result.content)
 
     return attr
 
@@ -410,14 +525,14 @@ def output_filteration(output_old, parser1, parser2 ,session_id):
         if product == '':
             product ='gift'
         
-        # print("perfect subcategory: " , sub)
+        print("perfect subcategory: " , sub)
 
         try:
             title = conversation_title(memory_dict[session_id].buffer)
             new = title.get('Title')
         except Exception as e:
             new = None
-        # print("title :",new)
+        print("title :",new)
         
         try:
             amazon = get_products( product)
@@ -430,6 +545,8 @@ def output_filteration(output_old, parser1, parser2 ,session_id):
         json["result"] = output
         json["session_id"] = session_id
         json["Title"] = new
+        print("total calls", COUNTER )
+        print("cost:", global_token_stats)
 
     else:
 
@@ -458,12 +575,15 @@ def main_input(user_input, user_session_id):
         parser2 = example_response( output)
     except Exception as e:
         parser2 = {"example": ['']}
-
-    # print(output)
-    # print(parser1)
-    # print(parser2)
+    # print(global_token_stats)
+    print(output)
+    print(parser1)
+    print(parser2)
 
     final_output = output_filteration( output, parser1, parser2, user_session_id)
 
     return final_output
+# session_memory = get_or_create_memory_for_session("user_session_id")
+# print(initial_chat("hi", session_memory ))
+# print(global_token_stats)
 
