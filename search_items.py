@@ -5,6 +5,7 @@ from paapi5_python_sdk.models.search_items_resource import SearchItemsResource
 from paapi5_python_sdk.rest import ApiException
 import os
 import json
+from cache_service import get_cached_response
 
 access = os.environ.get('ACCESS_KEY')
 
@@ -16,9 +17,9 @@ partner = os.environ.get('PARTNER_TAG')
 def search_items(product ):
     # print("1. ",keyword, "2. ",category,"3. ",budget_value)
     # print("Product :", product)
-    
 
-    
+
+
     access_key = access
     secret_key = secret
     partner_tag = partner
@@ -37,7 +38,7 @@ def search_items(product ):
     #     category = "All"
     search_index ="All"
 
-   
+
 
     """ Specify item count to be returned in search result """
     item_count = 4
@@ -57,7 +58,7 @@ def search_items(product ):
     """ Forming request """
     try:
         search_items_request = SearchItemsRequest(
-            
+
             partner_tag=partner_tag,
             partner_type=PartnerType.ASSOCIATES,
             keywords=keywords,
@@ -70,11 +71,14 @@ def search_items(product ):
         return
 
     try:
-        """ Sending request """
-        response = default_api.search_items(search_items_request)
-        
 
-        
+        """ Sending request """
+        # response = default_api.search_items(search_items_request)
+        # NOTE - Check if response exists in cache, return if it does otherwise send request to paapi
+        get_cached_response(search_items_request, default_api.search_items)
+
+
+
 
         # print("API called Successfully")
         # print("Complete Response:", response)
@@ -128,7 +132,7 @@ def search_items(product ):
 
 def simplify_json(json_obj):
     result = {}
- 
+
     def flatten(obj, prefix=""):
         if isinstance(obj, dict):
             for key, value in obj.items():
@@ -136,17 +140,13 @@ def simplify_json(json_obj):
                 flatten(value, new_key)
         else:
             result[prefix] = obj
- 
+
     flatten(json_obj)
     return result
- 
- 
+
+
 def getitems(product = "gift items"  ):
     api_output = simplify_json(search_items(product ))
     api_output=api_output[""]
     api_output_dict= api_output.to_dict()
     return api_output_dict
-
-
-
-
