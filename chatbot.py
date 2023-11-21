@@ -14,7 +14,7 @@ from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 import json
 import tiktoken
 from count_tokens import extract_token_stats
-from search_items import getitems
+from search_items import search_items
 import tiktoken
 api_key = os.environ.get('OPENAI_API_KEY')
 llm = ChatOpenAI(openai_api_key=api_key , temperature=0)
@@ -506,7 +506,7 @@ def product_response( product):
     return attr
 
 def get_products( product ):
-    result = getitems(product)
+    result = search_items(product)
     return result
     
 

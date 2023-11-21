@@ -73,11 +73,12 @@ def search_items(product ):
     try:
 
         """ Sending request """
-        # response = default_api.search_items(search_items_request)
         # NOTE - Check if response exists in cache, return if it does otherwise send request to paapi
-        get_cached_response(search_items_request, default_api.search_items)
-
-
+        response = get_cached_response(search_items_request, default_api.search_items)
+        # if cached_response:
+        #      response = cache_response
+        # else:
+        #     response = default_api.search_items(search_items_request)
 
 
         # print("API called Successfully")
