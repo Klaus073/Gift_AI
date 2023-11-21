@@ -576,15 +576,15 @@ def main_input(user_input, user_session_id):
     try:
         parser1 = get_attributes( output)
     except Exception as e:
-        parser1 = {"product": "" , "flag": "" , "features": {}}
+        parser1 = {"product": "" , "flag": "" , "features": {} , "feedback" : ""}
     try:
         parser2 = example_response( output)
     except Exception as e:
         parser2 = {"example": ['']}
 
-    print(output)
-    print(parser1)
-    print(parser2)
+    # print(output)
+    # print(parser1)
+    # print(parser2)
 
     final_output = output_filteration( output, parser1, parser2, user_session_id)
 
