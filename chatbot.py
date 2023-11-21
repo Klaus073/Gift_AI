@@ -15,7 +15,7 @@ from langchain.callbacks import get_openai_callback
 from search_items import getitems
 import tiktoken
 api_key = os.environ.get('OPENAI_API_KEY')
-llm = ChatOpenAI(openai_api_key=api_key)
+llm = ChatOpenAI(openai_api_key=api_key , temperature=0)
 memory_dict = {}
 # global_token_stats = {
 #     "total_tokens_used": 0,
@@ -53,45 +53,52 @@ def initial_chat(user_input, session_memory):
 
                     **Example Follow-up Questions:**
                     1. What budget range are you considering for the gift?
-                    2. Who is the lucky recipient of the gift?
-                    3. Share any specific interests or requirements for the product.
-                    4. Could you provide the age of the user or recipient?
+                    2. Share any specific interests or requirements for the product.
 
                     **Let's Do It Step by Step:**
 
-                    **1. Ensure User Understanding:**
-                    - Ask one follow-up question at a time to maintain a conversational flow.
-                    - Avoid a strict one-question-at-a-time structure but limit the number of questions asked per interaction to one.
+                    **Step 1. Ensure User Understanding:**
+                    - Begin by asking one follow-up question to maintain a conversational flow.
+                    - Limit the number of questions asked per interaction to one.
                     - If a user's input suggests adult preferences, offer assistance accordingly.
-                    - Assume the existence of a user-requested unfamiliar product, proceeding with information gathering.
+                    - Assume the existence of a user-requested unfamiliar product and proceed with information gathering.
 
-                    **2. Follow-up Questioning with Record:**
+                    **Step 2. Follow-up Questioning with Record:**
                     - Engage in follow-up questions to understand user preferences.
+                    - Ask follow-up questions by providing sample answers.
                     - Keep a record of the previous response to guide the conversation.
                     - Emphasize clarity but allow flexibility in the conversation.
+                    - Your followup questions does not exceed the limit of 4
 
-                    **3. Gather Information:**
+                    **Step 3. Gather Information:**
+                    - Identify the category from user input and ask relative questions to that category.
                     - Collect necessary information about the product the user is interested in.
                     - If the budget response is vague, kindly ask for a specific range.
                     - Ensure a comprehensive understanding of their requirements.
 
-                    **4. User Interaction Conclusion:**
-                    - Conclude by summarizing the product name and user's preferences, including the budget.
-                    - If the user mentions the budget during the conversation, include it in the final output.
-                    - Recommend one product based on the gathered information.
-
-                    **5. Summary and Recommendation:**
-                    Thank you for mentioning that your [relationship] is into [interest]. That gives me a better idea of their preferences. Based on the information you've provided, I recommend considering the "[Recommended Product]." It is [description of the product] and aligns with [specific preferences].
-
-                    Here is the summary of your preferences:
+                    **Step 4.Recommendation:**
+                    Use the following recommedation format specificall to show the product recommendations.
+                    ###Recommendation Format:###
                     - Product name: [Product Name]
                     - Budget range: [Budget range]
-                    - Recipient: [Recipient]
                     - Preference: [Specific preferences]
-                    - Age: [Age]
-                    - Interest: [Interest]
+                    
 
-                    I hope you find this recommendation suitable! Let me know if there's anything else I can help you with.
+                    **Step 5. Present and Refine Products Based on Feedback:**
+                    ###Recommendation Format:###
+                    - Product name: [Product Name]
+                    - Budget range: [Budget range]
+                    - Preference: [Specific preferences]
+                    
+
+                    - Present a single product recommendation based on gathered information.
+                    - Ask for user feedback on the products by prompting user's given prefrences.
+                    - Also prompt the user if he wants to products outside the [prefrences]
+                    - If the user expresses interest in seeing more options, provide another single recommendation.
+                    - Continuously refine product suggestions based on feedback.
+                    - Repeat the process, presenting refined recommendations one at a time and seeking feedback until the user indicates satisfaction or makes specific changes to preferences.
+                    - Maintain a positive and engaging tone throughout the interaction.
+
 
 
                 """
@@ -122,7 +129,7 @@ def initial_chat(user_input, session_memory):
     # Update global token stats
     # for key in global_token_stats:
     #     global_token_stats[key] += token_info[key]
-    insert_global_token_stats(token_info)
+    # insert_global_token_stats(token_info)
     return session_memory.buffer[-1].content
 
 def get_attributes(ai):
@@ -130,7 +137,8 @@ def get_attributes(ai):
     response_schemas = [
         ResponseSchema(name="product name", description="name of product item"),
         ResponseSchema(name="flag", description="bool value true or false"),
-        ResponseSchema(name="features", description="a dictionary with keys and values of features")
+        ResponseSchema(name="features", description="a dictionary with keys and values of features"),
+        ResponseSchema(name="feedback", description="a descriptive sentece asking feedback on prefrences")
     ]
 
     output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
@@ -145,7 +153,7 @@ def get_attributes(ai):
                 - Focus on observing AI behavior with a primary emphasis on identifying whether the response involves inquiring about the user's product preferences, providing a product recommendation, or asking recommendation questions.
                 - AI Response: {ai}
                 - Pay close attention to how the AI formulates questions and recommendations.
-
+ 
                 **Examples of AI Questions about Products:**
                 1. "Hello! Are you looking for gift recommendations?"
                 2. "Hey! Do you need any gift recommendations?"
@@ -154,31 +162,34 @@ def get_attributes(ai):
                 5. "Could you let me know the occasion and budget for the gift?"
                 6. "Hello! How can I assist you today? Are you looking for a gift for someone special?"
                 7. "That's lovely! A piece of jewelry can be a perfect gift for a spouse. Now, could you please let me know your budget for the jewelry? Knowing the budget will help me suggest options that align with your preferences."
-
+ 
                 **Examples of AI Product Recommendations:**
                 1. "Apple Watch Series 6: Stylish and functional smartwatch with fitness tracking."
                 2. "Sony WH-1000XM4 Wireless Headphones: Exceptional sound quality and noise cancellation."
                 3. "DJI Mavic Air 2 Drone: Excellent for photography or videography enthusiasts."
                 4. "I will search for Brimstone costumes within your budget."
-
+                5. "Certainly! Here's another book recommendation for you: "To Kill a Mockingbird" by Harper Lee. It's a classic novel set in the 1930s that explores themes of racial injustice, morality, and the loss of innocence. The story is told through the eyes of Scout Finch, a young girl growing up in the fictional town of Maycomb, Alabama. This book is known for its powerful storytelling and thought-provoking messages. The budget range for this book is typically around $10 to $20."
+                6. "Certainly! Here's another book recommendation for you: "The Catcher in the Rye" by J.D. Salinger. It's a classic coming-of-age novel that follows the story of Holden Caulfield, a disillusioned teenager navigating the complexities of adulthood and society. This book is known for its introspective narrative and exploration of themes such as identity, alienation, and the loss of innocence. The budget range for this book is typically around $10 to $20."
                 Let's systematically approach the task:
-
+ 
                 ### 1. Response Examination
                 - Carefully analyze the provided response.
                 - Clearly identify whether the response involves inquiring about the user's product preferences, providing a product recommendation, or asking recommendation questions.
-
+ 
                 ### 2. Flag Establishment
                 - Use a binary flag to capture AI behavior.
                 - When the AI suggests products, treat it as a recommendation; otherwise, set the flag to 'False.'
-
+ 
                 ### 3. Recommendation Details
                 - If the AI is recommending a product, proceed to the next step.
                 - Explicitly state how to extract specific product features, such as budget ('budget'), minimum budget ('min'), maximum budget ('max'), and other relevant keys.
-
+ 
                 ### 4. Return Values
+                - Breakdown the budget range into min and max key value pairs.
                 - Systematically organize the extracted feature values into a dictionary.
                 - Ensure each feature is paired with its corresponding value, including keys like 'budget,' 'min,' 'max,' and any other relevant keys.
-
+                - Extract the feedback mentioned in the ai response.
+ 
                 ### 5. Reflection
                 - Reflect on the stepwise process.
                 - Offer insights into each stage of the analysis.
@@ -214,7 +225,7 @@ def get_attributes(ai):
     # for key in global_token_stats:
     #     global_token_stats[key] += token_info[key]
     attr = output_parser.parse(result.content)
-    insert_global_token_stats(token_info)
+    # insert_global_token_stats(token_info)
 
     return attr
 
@@ -238,20 +249,21 @@ def example_response( ai_response):
                 - Immerse the model in the role of a gift buyer.
 
                 *Instructions:*
+                - When asked the question about budget provide specifically provide numerical answers.
                 - Your response cannot be a question.
                 - Exhibit responses akin to the process of selecting and purchasing a gift.
                 - Demonstrate how to consider preferences and features when choosing a gift.
-                - Craft only 4 responses, each spanning 1 to 2 words.
+                - Craft only 8 responses, each spanning 1 to 2 words.
 
                 *Output:*
-                - Provide a list of 4 responses, each containing 1 to 2 words.
+                - Provide a list of 8 responses, each containing 1 to 2 words.
 
                 **Purpose:**
-                - Generate a limited set of four sample responses that strictly adhere to the 1 to 2-word limit, effectively addressing user queries about gift preferences.
+                - Generate a limited set of eight sample responses that strictly adhere to the 1 to 2-word limit, effectively addressing user queries about gift preferences.
 
                 **Remember:**
                 - Focus on concise answers that directly respond to the given AI questions. Be explicit in your responses.
-                - Provide exactly four responses in total.
+                - Provide exactly eight responses in total.
                 - Prioritize extreme brevity within the 1 to 2-word limit.
                 - Align the responses with the context of the conversation.
                 - Maintain a conversational tone in the generated answers.
@@ -287,7 +299,7 @@ def example_response( ai_response):
     # for key in global_token_stats:
     #     global_token_stats[key] += token_info[key]
     attr = output_parser.parse(result.content)
-    insert_global_token_stats(token_info)
+    # insert_global_token_stats(token_info)
 
     return attr
 
@@ -349,7 +361,7 @@ def change_tone( ai_input):
     # for key in global_token_stats:
     #     global_token_stats[key] += token_info[key]
     attr = output_parser.parse(result.content)
-    insert_global_token_stats(token_info)
+    # insert_global_token_stats(token_info)
 
     return attr
 
@@ -407,7 +419,7 @@ def conversation_title( conversation):
     # for key in global_token_stats:
     #     global_token_stats[key] += token_info[key]
     title = output_parser.parse(result.content)
-    insert_global_token_stats(token_info)
+    # insert_global_token_stats(token_info)
 
     return title
 
@@ -467,7 +479,7 @@ def product_response( product):
     # Update global token stats
     
     attr = output_parser.parse(result.content)
-    insert_global_token_stats(token_info)
+    # insert_global_token_stats(token_info)
 
     return attr
 
@@ -491,6 +503,7 @@ def output_filteration(output_old, parser1, parser2 ,session_id):
 
     product = parser1.get('product name')
     flag = parser1.get('flag')
+    feedback = parser1.get('feedback')
 
     example_response = parser2.get('example')
     if example_response == ['']:
@@ -538,6 +551,7 @@ def output_filteration(output_old, parser1, parser2 ,session_id):
         json["result"] = output
         json["session_id"] = session_id
         json["Title"] = new
+        json["feedback"] = feedback
         # insert_global_token_stats(global_token_stats)
 
     else:
@@ -568,9 +582,9 @@ def main_input(user_input, user_session_id):
     except Exception as e:
         parser2 = {"example": ['']}
 
-    # print(output)
-    # print(parser1)
-    # print(parser2)
+    print(output)
+    print(parser1)
+    print(parser2)
 
     final_output = output_filteration( output, parser1, parser2, user_session_id)
 
