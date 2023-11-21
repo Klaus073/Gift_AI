@@ -89,24 +89,32 @@ def initial_chat(user_input, session_memory):
                     **Step 4.Recommendation:**
                     Use the following recommedation format specificall to show the product recommendations.
                     ###Recommendation Format:###
-                    - Product name: [Product Name]
+                    - Product name 1: [Product Name]
+                    - Product name 2: [Product Name]
+                    - Product name 3: [Product Name]
+                    - Product name 4: [Product Name]
+                    
                     - Budget range: [Budget range]
                     - Preference: [Specific preferences]
                     
 
                     **Step 5. Present and Refine Products Based on Feedback:**
                     ###Recommendation Format:###
-                    - Product name: [Product Name]
+                    - Product name 1: [Product Name]
+                    - Product name 2: [Product Name]
+                    - Product name 3: [Product Name]
+                    - Product name 4: [Product Name]
+
                     - Budget range: [Budget range]
                     - Preference: [Specific preferences]
                     
 
-                    - Present a single product recommendation based on gathered information.
+                    - Present a 4 product recommendation based on gathered information.
                     - Ask for user feedback on the products by prompting user's given prefrences.
                     - Also prompt the user if he wants to products outside the [prefrences]
-                    - If the user expresses interest in seeing more options, provide another single recommendation.
+                    - If the user expresses interest in seeing more options, provide another 4 recommendation.
                     - Continuously refine product suggestions based on feedback.
-                    - Repeat the process, presenting refined recommendations one at a time and seeking feedback until the user indicates satisfaction or makes specific changes to preferences.
+                    - Repeat the process, presenting refined recommendations 4 at a time and seeking feedback until the user indicates satisfaction or makes specific changes to preferences.
                     - Maintain a positive and engaging tone throughout the interaction.
 
 
@@ -146,7 +154,7 @@ def get_attributes(ai):
     global COUNTER  # Add this line if you want to modify the global variable
     COUNTER = COUNTER + 1
     response_schemas = [
-        ResponseSchema(name="product name", description="name of product item"),
+        ResponseSchema(name="product name", description="list of product item"),
         ResponseSchema(name="flag", description="bool value true or false"),
         ResponseSchema(name="features", description="a dictionary with keys and values of features"),
         ResponseSchema(name="feedback", description="a descriptive sentece asking feedback on prefrences")
@@ -255,34 +263,29 @@ def example_response( ai_response):
             HumanMessagePromptTemplate.from_template(
                 """
                **Role:**
-                - You are the AI demonstrating example answers for follow-up questions related to gift preferences.
-                - Assume the role of a virtual gift advisor providing concise and relevant responses.
-
-                **Let's Do It Step by Step:**
-
-                **Step 1: Understand the Task**
-                - Dive into the task of generating very concise responses for follow-up questions, strictly within the 1 to 2-word limit.
-                - Focus on providing helpful and contextually relevant answers in this limited format.
+                - Embody the role of a gift buyer helping users choose the perfect gift.
+                - Deliver concise, non-question responses.
 
                 *Instructions:*
-                - When asked the question about budget provide specifically provide numerical answers.
-                - Your response cannot be a question.
-                - Exhibit responses akin to the process of selecting and purchasing a gift.
-                - Demonstrate how to consider preferences and features when choosing a gift.
-                - Craft only 8 responses, each spanning 1 to 2 words.
-
-                *Output:*
-                - Provide a list of 8 responses, each containing 1 to 2 words.
+                - Provide specific numerical answers for budget inquiries.
+                - Respond in a manner reflecting the process of selecting and purchasing a gift.
+                - Generate 8 responses, each 1 to 2 words.
+                - Keep responses clear and directly related to gift preferences.
 
                 **Purpose:**
-                - Generate a limited set of eight sample responses that strictly adhere to the 1 to 2-word limit, effectively addressing user queries about gift preferences.
+                - Generate 8 sample responses adhering to the 1 to 2-word limit for addressing user queries about gift preferences.
 
                 **Remember:**
-                - Focus on concise answers that directly respond to the given AI questions. Be explicit in your responses.
-                - Provide exactly eight responses in total.
-                - Prioritize extreme brevity within the 1 to 2-word limit.
-                - Align the responses with the context of the conversation.
-                - Maintain a conversational tone in the generated answers.
+                - Ensure explicit and context-aligned responses.
+                - Exclude questions from the responses.
+                - Maintain a conversational tone.
+
+                *Output:*
+                - Verify relevance of sample answers.
+                - Confirm the absence of questions in responses.
+                - Provide a list of 8 responses, each consisting of 1 to 2 words.
+
+                
 
                 
 
