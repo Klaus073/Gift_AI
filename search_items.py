@@ -17,8 +17,11 @@ partner = os.environ.get('PARTNER_TAG')
 def search_items(product ):
     # print("1. ",keyword, "2. ",category,"3. ",budget_value)
     # print("Product :", product)
-
-
+    # min = int(min)
+    # max = int(max)
+    # # print("maxprice", budget)
+    # print("min",min,type(min))
+    # print("max",max,type(max))
 
     access_key = access
     secret_key = secret
@@ -29,7 +32,7 @@ def search_items(product ):
 
     default_api = DefaultApi(access_key=access_key, secret_key=secret_key, host=host, region=region)
     if product == '':
-        keywords = "gift"
+        keywords = "gift items"
     keywords = product
 
     """ Specify the category in which search request is to be made """
@@ -37,11 +40,12 @@ def search_items(product ):
     # if category == "":
     #     category = "All"
     search_index ="All"
+ 
 
 
 
     """ Specify item count to be returned in search result """
-    item_count = 4
+    item_count = 1
 
     """ Choose resources you want from SearchItemsResource enum """
     """ For more details, refer: https://webservices.amazon.com/paapi5/documentation/search-items.html#resources-parameter """
@@ -64,7 +68,7 @@ def search_items(product ):
             keywords=keywords,
             search_index=search_index,
             item_count=item_count,
-            resources=search_items_resource,
+            resources=search_items_resource
         )
     except ValueError as exception:
         print("Error in forming SearchItemsRequest: ", exception)
@@ -146,8 +150,16 @@ def simplify_json(json_obj):
     return result
 
 
-def getitems(product = "gift items"  ):
+def getitems(product   ):
     api_output = simplify_json(search_items(product ))
     api_output=api_output[""]
     api_output_dict= api_output.to_dict()
     return api_output_dict
+
+default = ["gift books", "gift electronics", "gift video games", "gift artifacts"]
+def multiple_items(products  ):
+    for i in products:
+        prod = getitems(i )
+
+# zz = search_items("call of duty modern warfare 2")
+# print(zz)
