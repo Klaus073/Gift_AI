@@ -6,12 +6,14 @@ from langchain.prompts import (
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
+from langchain.callbacks import get_openai_callback
 from token_stats_db import insert_global_token_stats
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 import json
-from langchain.callbacks import get_openai_callback
+import tiktoken
+from count_tokens import extract_token_stats
 from search_items import getitems
 import tiktoken
 api_key = os.environ.get('OPENAI_API_KEY')
@@ -34,6 +36,12 @@ file_path = os.path.join(current_directory, 'data', 'Categories_and_Subcategorie
 
 with open(file_path, 'r') as file:
     data = json.load(file)
+    
+def num_tokens_from_string(string: str, encoding_name: str) -> int:
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.get_encoding(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
 
 def get_or_create_memory_for_session(session_id):
     if session_id not in memory_dict:
@@ -42,6 +50,8 @@ def get_or_create_memory_for_session(session_id):
 
 def initial_chat(user_input, session_memory):
     
+    global COUNTER  # Add this line if you want to modify the global variable
+    COUNTER = COUNTER + 1
     prompt_rough = ChatPromptTemplate(
         messages=[
             SystemMessagePromptTemplate.from_template(
@@ -133,7 +143,8 @@ def initial_chat(user_input, session_memory):
     return session_memory.buffer[-1].content
 
 def get_attributes(ai):
-    
+    global COUNTER  # Add this line if you want to modify the global variable
+    COUNTER = COUNTER + 1
     response_schemas = [
         ResponseSchema(name="product name", description="name of product item"),
         ResponseSchema(name="flag", description="bool value true or false"),
@@ -230,7 +241,8 @@ def get_attributes(ai):
     return attr
 
 def example_response( ai_response):
-    
+    global COUNTER  # Add this line if you want to modify the global variable
+    COUNTER = COUNTER + 1
     response_schemas = [
         ResponseSchema(name="example", description="list of strings of example responses")
     ]
@@ -242,11 +254,15 @@ def example_response( ai_response):
         messages=[
             HumanMessagePromptTemplate.from_template(
                 """
-                
+               **Role:**
+                - You are the AI demonstrating example answers for follow-up questions related to gift preferences.
+                - Assume the role of a virtual gift advisor providing concise and relevant responses.
 
-                *Role:*
-                - You are the AI demonstrating example answers for {ai_response}.
-                - Immerse the model in the role of a gift buyer.
+                **Let's Do It Step by Step:**
+
+                **Step 1: Understand the Task**
+                - Dive into the task of generating very concise responses for follow-up questions, strictly within the 1 to 2-word limit.
+                - Focus on providing helpful and contextually relevant answers in this limited format.
 
                 *Instructions:*
                 - When asked the question about budget provide specifically provide numerical answers.
@@ -304,7 +320,8 @@ def example_response( ai_response):
     return attr
 
 def change_tone( ai_input):
-    
+    global COUNTER  # Add this line if you want to modify the global variable
+    COUNTER = COUNTER + 1
     response_schemas = [
         ResponseSchema(name="sentence", description="descriptive sentence ")
     ]
@@ -367,7 +384,8 @@ def change_tone( ai_input):
 
 
 def conversation_title( conversation):
-    
+    global COUNTER  # Add this line if you want to modify the global variable
+    COUNTER = COUNTER + 1
     response_schemas = [
         ResponseSchema(name="Title", description="title of conversation ")
     ]
@@ -427,7 +445,8 @@ def conversation_title( conversation):
 # sub_categories =['Kindle Kids', 'Kindle Paperwhite', 'Kindle Oasis', 'Kindle Books', 'Camera & Photo', 'Headphones', 'Video Game Consoles & Accessories', 'Wearable Technology', 'Cell Phones & Accessories', 'Computer Accessories & Peripherals', 'Monitors', 'Laptop Accessories', 'Data Storage', 'Amazon Smart Home', 'Smart Home Lighting', 'Smart Locks and Entry', 'Security Cameras and Systems', 'Painting, Drawing & Art Supplies', 'Beading & Jewelry Making', 'Crafting', 'Sewing', 'Car Care', 'Car Electronics & Accessories', 'Exterior Accessories', 'Interior Accessories', 'Motorcycle & Powersports', 'Activity & Entertainment', 'Apparel & Accessories', 'Baby & Toddler Toys', 'Nursery', 'Travel Gear', 'Makeup', 'Skin Care', 'Hair Care', 'Fragrance', 'Foot, Hand & Nail Care', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Handbags', 'Clothing', 'Shoes', 'Watches', 'Accessories', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Handbags', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Health Care', 'Household Supplies', 'Vitamins & Dietary Supplements', 'Wellness & Relaxation', 'Kitchen & Dining', 'Bedding', 'Bath', 'Furniture', 'Home Décor', 'Wall Art', 'Carry-ons', 'Backpacks', 'Garment bags', 'Travel Totes', 'Dogs', 'Cats', 'Fish & Aquatic Pets', 'Birds', 'Sports and Outdoors', 'Outdoor Recreation', 'Sports & Fitness', 'Tools & Home Improvement', 'Appliances', 'Building Supplies', 'Electrical', 'Action Figures & Statues', 'Arts & Crafts', 'Baby & Toddler Toys', 'Building Toys', 'Video Games', 'PlayStation', 'Xbox', 'Nintendo', 'PC', 'All gift cards', 'eGift cards', 'Gift cards by mail', 'Specialty gift cards']
 
 def product_response( product):
-    
+    global COUNTER  # Add this line if you want to modify the global variable
+    COUNTER = COUNTER + 1
     response_schemas = [
         ResponseSchema(name="Category", description="a key value of most relevant category and sub category")]
 
@@ -531,14 +550,14 @@ def output_filteration(output_old, parser1, parser2 ,session_id):
         if product == '':
             product ='gift'
         
-        # print("perfect subcategory: " , sub)
+        print("perfect subcategory: " , sub)
 
         try:
             title = conversation_title(memory_dict[session_id].buffer)
             new = title.get('Title')
         except Exception as e:
             new = None
-        # print("title :",new)
+        print("title :",new)
         
         try:
             amazon = get_products( product)
@@ -581,12 +600,15 @@ def main_input(user_input, user_session_id):
         parser2 = example_response( output)
     except Exception as e:
         parser2 = {"example": ['']}
-
-    # print(output)
-    # print(parser1)
-    # print(parser2)
+    # print(global_token_stats)
+    print(output)
+    print(parser1)
+    print(parser2)
 
     final_output = output_filteration( output, parser1, parser2, user_session_id)
 
     return final_output
+# session_memory = get_or_create_memory_for_session("user_session_id")
+# print(initial_chat("hi", session_memory ))
+# print(global_token_stats)
 
