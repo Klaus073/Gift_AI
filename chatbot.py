@@ -104,6 +104,7 @@ def initial_chat(user_input, session_memory):
                     - Preference: [Specific preferences]
 
                     
+                    
 
                     **Step 5. Present and Refine Products Based on Feedback:**
                         - FOR PRODUCT RECOMENDATIONS FOLLOW THE FORMAT SPECIFICALLY
@@ -291,8 +292,8 @@ def example_response( ai_response):
             - Maintain a neutral tone to convey information without introducing unnecessary emotions.
             - Avoid initiating small talk or unrelated information.
 
-            #### **Example Responses:**
-            - 'Electronics', 'Books', 'Fashion', 'Home Decor', 'Toys', 'Personal Care', 'Outdoor Gear', 'Gift Cards'
+            
+           
 
 
             ### **Step 2: Inquiry Response**
