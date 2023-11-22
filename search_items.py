@@ -17,8 +17,11 @@ partner = os.environ.get('PARTNER_TAG')
 def search_items(product ):
     # print("1. ",keyword, "2. ",category,"3. ",budget_value)
     # print("Product :", product)
-
-
+    # min = int(min)
+    # max = int(max)
+    # # print("maxprice", budget)
+    # print("min",min,type(min))
+    # print("max",max,type(max))
 
     access_key = access
     secret_key = secret
@@ -29,7 +32,7 @@ def search_items(product ):
 
     default_api = DefaultApi(access_key=access_key, secret_key=secret_key, host=host, region=region)
     if product == '':
-        keywords = "gift"
+        keywords = "gift items"
     keywords = product
 
     """ Specify the category in which search request is to be made """
@@ -37,6 +40,7 @@ def search_items(product ):
     # if category == "":
     #     category = "All"
     search_index ="All"
+ 
 
 
 
@@ -64,7 +68,7 @@ def search_items(product ):
             keywords=keywords,
             search_index=search_index,
             item_count=item_count,
-            resources=search_items_resource,
+            resources=search_items_resource
         )
     except ValueError as exception:
         print("Error in forming SearchItemsRequest: ", exception)
@@ -73,11 +77,12 @@ def search_items(product ):
     try:
 
         """ Sending request """
-        # response = default_api.search_items(search_items_request)
         # NOTE - Check if response exists in cache, return if it does otherwise send request to paapi
-        get_cached_response(search_items_request, default_api.search_items)
-
-
+        response = get_cached_response(search_items_request, default_api.search_items)
+        # if cached_response:
+        #      response = cache_response
+        # else:
+        #     response = default_api.search_items(search_items_request)
 
 
         # print("API called Successfully")
@@ -145,8 +150,16 @@ def simplify_json(json_obj):
     return result
 
 
-def getitems(product = "gift items"  ):
+def getitems(product   ):
     api_output = simplify_json(search_items(product ))
     api_output=api_output[""]
     api_output_dict= api_output.to_dict()
     return api_output_dict
+
+default = ["gift books", "gift electronics", "gift video games", "gift artifacts"]
+def multiple_items(products  ):
+    for i in products:
+        prod = getitems(i )
+
+# zz = search_items("call of duty modern warfare 2")
+# print(zz)

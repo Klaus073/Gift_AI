@@ -14,7 +14,7 @@ from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 import json
 import tiktoken
 from count_tokens import extract_token_stats
-from search_items import getitems
+from search_items import search_items
 import tiktoken
 api_key = os.environ.get('OPENAI_API_KEY')
 llm = ChatOpenAI(openai_api_key=api_key , temperature=0)
@@ -62,7 +62,7 @@ def initial_chat(user_input, session_memory):
                     - Maintain a positive and helpful tone, playing the role of a virtual gift advisor.
 
                     **Example Follow-up Questions:**
-                    1. What budget range are you considering for the gift?
+                    1. What budget are you considering for the gift?
                     2. Share any specific interests or requirements for the product.
 
                     **Let's Do It Step by Step:**
@@ -70,56 +70,67 @@ def initial_chat(user_input, session_memory):
                     **Step 1. Ensure User Understanding:**
                     - Begin by asking one follow-up question to maintain a conversational flow.
                     - Limit the number of questions asked per interaction to one.
+                    - Ask follow-up questions by providing sample answers.
                     - If a user's input suggests adult preferences, offer assistance accordingly.
                     - Assume the existence of a user-requested unfamiliar product and proceed with information gathering.
 
                     **Step 2. Follow-up Questioning with Record:**
                     - Engage in follow-up questions to understand user preferences.
-                    - Ask follow-up questions by providing sample answers.
                     - Keep a record of the previous response to guide the conversation.
                     - Emphasize clarity but allow flexibility in the conversation.
-                    - Your followup questions does not exceed the limit of 4
 
                     **Step 3. Gather Information:**
-                    - Identify the category from user input and ask relative questions to that category.
+                    - Identify the category from user input and ask relative questions to that category, going in-depth if needed.
                     - Collect necessary information about the product the user is interested in.
                     - If the budget response is vague, kindly ask for a specific range.
                     - Ensure a comprehensive understanding of their requirements.
 
-                    **Step 4.Recommendation:**
-                    Use the following recommedation format specificall to show the product recommendations.
+                    **Step 4. Recommendation Format Summary, Recommendation:**
+
+                    - FOR PRODUCT RECOMENDATIONS FOLLOW THE FORMAT SPECIFICALLY
+
                     ###Recommendation Format:###
-                    - Product name 1: [Product Name]
-                    - Product name 2: [Product Name]
-                    - Product name 3: [Product Name]
-                    - Product name 4: [Product Name]
-                    
-                    - Budget range: [Budget range]
+                    - Product Name 1: [Product Name ]
+                    - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
+                    - Product Name 2: [Product Name ]
+                    - Budget Provided: [Budget Provided]
+                    - Preference: [Specific preferences]
+                    - Product Name 3: [Product Name ]
+                    - Budget Provided: [Budget Provided]
+                    - Preference: [Specific preferences]
+                    - Product Name 4: [Product Name ]
+                    - Budget Provided: [Budget Provided]
+                    - Preference: [Specific preferences]
+
+                    
                     
 
                     **Step 5. Present and Refine Products Based on Feedback:**
-                    ###Recommendation Format:###
-                    - Product name 1: [Product Name]
-                    - Product name 2: [Product Name]
-                    - Product name 3: [Product Name]
-                    - Product name 4: [Product Name]
-
-                    - Budget range: [Budget range]
-                    - Preference: [Specific preferences]
+                        - FOR PRODUCT RECOMENDATIONS FOLLOW THE FORMAT SPECIFICALLY
                     
+                    ###Recommendation Format:###
+                    - Product Name 1: [Product Name ]
+                    - Budget Provided: [Budget Provided]
+                    - Preference: [Specific preferences]
+                    - Product Name 2: [Product Name ]
+                    - Budget Provided: [Budget Provided]
+                    - Preference: [Specific preferences]
+                    - Product Name 3: [Product Name ]
+                    - Budget Provided: [Budget Provided]
+                    - Preference: [Specific preferences]
+                    - Product Name 4: [Product Name ]
+                    - Budget Provided: [Budget Provided]
+                    - Preference: [Specific preferences]
 
-                    - Present a 4 product recommendation based on gathered information.
-                    - Ask for user feedback on the products by prompting user's given prefrences.
-                    - Also prompt the user if he wants to products outside the [prefrences]
-                    - If the user expresses interest in seeing more options, provide another 4 recommendation.
+                    - Present four product recommendations based on gathered information.
+                    - Ask for user feedback on the recommendations.
+                    - If the user expresses interest in seeing more options, provide another set of four recommendations.
                     - Continuously refine product suggestions based on feedback.
-                    - Repeat the process, presenting refined recommendations 4 at a time and seeking feedback until the user indicates satisfaction or makes specific changes to preferences.
+                    - Repeat the process, presenting refined recommendations four at a time and seeking feedback until the user indicates satisfaction or makes specific changes to preferences.
                     - Maintain a positive and engaging tone throughout the interaction.
 
-
-
-                """
+                    """
             ),
             MessagesPlaceholder(variable_name="chat_history"),
             HumanMessagePromptTemplate.from_template("{question}")
@@ -204,8 +215,11 @@ def get_attributes(ai):
                 - Explicitly state how to extract specific product features, such as budget ('budget'), minimum budget ('min'), maximum budget ('max'), and other relevant keys.
  
                 ### 4. Return Values
-                - Breakdown the budget range into min and max key value pairs.
+                - Breakdown the budget into min and max key value pairs.
+                - set the min ans max value based on the range.
+                - If signle amount is given set the min to 1 and max to the amount given.
                 - Systematically organize the extracted feature values into a dictionary.
+                - Store the amount withut dollar sign.
                 - Ensure each feature is paired with its corresponding value, including keys like 'budget,' 'min,' 'max,' and any other relevant keys.
                 - Extract the feedback mentioned in the ai response.
  
@@ -262,33 +276,55 @@ def example_response( ai_response):
         messages=[
             HumanMessagePromptTemplate.from_template(
                 """
-               **Role:**
-                - Embody the role of a gift buyer helping users choose the perfect gift.
-                - Deliver concise, non-question responses.
+              **Role:**
+            - Assume the persona of an answer generator, responsible for providing concise responses across various user inquiries.
+            
+            Question : {ai_response}
 
-                *Instructions:*
-                - Provide specific numerical answers for budget inquiries.
-                - Respond in a manner reflecting the process of selecting and purchasing a gift.
-                - Generate 8 responses, each 1 to 2 words.
-                - Keep responses clear and directly related to gift preferences.
+            **Step-by-Step Approach:**
 
-                **Purpose:**
-                - Generate 8 sample responses adhering to the 1 to 2-word limit for addressing user queries about gift preferences.
+           ### **Step 1: Initial Interaction**
+            - **Objective:** Establish a neutral and informative tone in the initial interaction while suggesting product categories.
 
-                **Remember:**
-                - Ensure explicit and context-aligned responses.
-                - Exclude questions from the responses.
-                - Maintain a conversational tone.
+            - **Guidelines:**
+            - Respond promptly with 1 to 2-word answers.
+            - Suggest relevant product categories in response to the user's inquiry about searching for a gift.
+            - Maintain a neutral tone to convey information without introducing unnecessary emotions.
+            - Avoid initiating small talk or unrelated information.
 
-                *Output:*
-                - Verify relevance of sample answers.
-                - Confirm the absence of questions in responses.
-                - Provide a list of 8 responses, each consisting of 1 to 2 words.
+            
+           
 
-                
 
-                
+            ### **Step 2: Inquiry Response**
+            - **Objective:** Generate concise responses directly aligning with the user's inquiry.
 
+            - **Guidelines:**
+            - Craft 8 responses, each consisting of 1 to 2 words.
+            - Ensure coherence in the generated responses for a seamless interaction.
+            - Tailor answers to match the specific context of the user's inquiry.
+            - Exclude unnecessary details or information that does not directly address the user's question.
+
+            ### **Step 3: Clarity and Relevance**
+            - **Objective:** Provide clear and relevant responses, maintaining a declarative format.
+
+            - **Guidelines:**
+            - when budget related questions asked then prompt only numerical values.
+            - Emphasize clarity in communication, avoiding ambiguity in responses.
+            - Link responses directly to the user's context, ensuring relevance.
+            - Exclude questions in the responses; maintain a declarative format for straightforward information delivery.
+
+            ### **Step 4: Output Validation**
+            - **Objective:** Confirm context appropriateness and relevance to the user's intent.
+
+            - **Guidelines:**
+            - Verify that the generated responses align with the user's inquiry.
+            - Ensure each response contributes meaningfully to the overall user interaction.
+            - Confirm the absence of questions in the responses to uphold the role of an answer generator.
+
+            - **Compilation:**
+            - Assemble a set of 8 responses, each adhering strictly to the 1 to 2-word limit.
+            - Review the compiled responses for consistency, coherence, and adherence to the established guidelines.
 
 
                 \n{format_instructions}\n{ai_response}
@@ -505,8 +541,8 @@ def product_response( product):
 
     return attr
 
-def get_products( product ):
-    result = getitems(product)
+def get_products( product  ):
+    result = search_items(product )
     return result
     
 
@@ -514,30 +550,55 @@ def get_products( product ):
 
 def output_filteration(output_old, parser1, parser2 ,session_id):
     
+    #change tone of raw message
     try:
         output = change_tone( output_old)
         output = output.get('sentence')
     except Exception as e:
         output = output_old
 
-
-    
-
+    #get features from get attrivutes functions
     product = parser1.get('product name')
     flag = parser1.get('flag')
     feedback = parser1.get('feedback')
-
+    
+    #get example responses from example fesponses functions
     example_response = parser2.get('example')
     if example_response == ['']:
         example_response = []
-
+    #Pre final json 
     json = {}
-
+    # check if the product is list of products or just a string
     if isinstance(product, list):
         product = ', '.join(product)
     
-    
+    # Check If the LLM Resposne is question or Recommendation
     if flag == "True" or flag == "true":
+        try:
+            # Check if 'features' key is present in the dictionary
+            if 'features' in parser1:
+                features_data = parser1['features']
+
+                # Check if 'min' key is present in the features data
+                if 'min' in features_data:
+                    min_value = features_data['min']
+
+                    # Check if the min value contains a dollar sign
+                    if '$' in min_value:
+                        # Remove the dollar sign and convert the value to an integer
+                        min_value = int(min_value.replace('$', ''))
+                # Check if 'max' key is present in the features data
+                if 'max' in features_data:
+                    max_value = features_data['max']
+
+                    # Check if the max value contains a dollar sign
+                    if '$' in max_value:
+                        # Remove the dollar sign and convert the value to an integer
+                        max_value = int(max_value.replace('$', ''))
+        except Exception as e:
+            min_value = 10 
+            max_value = 100
+       
         try:
             output = "Ok Let me Brain Storm some ideas .... "
             output = change_tone( output)
@@ -563,7 +624,7 @@ def output_filteration(output_old, parser1, parser2 ,session_id):
         print("title :",new)
         
         try:
-            amazon = get_products( product)
+            amazon = get_products( product )
         except Exception as e:
             print("error from amazon",e)
 
