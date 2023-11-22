@@ -45,7 +45,7 @@ def search_items(product ):
 
 
     """ Specify item count to be returned in search result """
-    item_count = 1
+    item_count = 4
 
     """ Choose resources you want from SearchItemsResource enum """
     """ For more details, refer: https://webservices.amazon.com/paapi5/documentation/search-items.html#resources-parameter """
