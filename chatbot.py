@@ -17,7 +17,8 @@ from count_tokens import extract_token_stats
 from search_items import search_items , multiple_items
 import tiktoken
 api_key = os.environ.get('OPENAI_API_KEY')
-llm = ChatOpenAI(model_name='gpt-4-0314',openai_api_key=api_key , temperature=0)
+llm = ChatOpenAI(model_name='gpt-4-0613',openai_api_key=api_key , temperature=0)
+llm2 = ChatOpenAI(openai_api_key=api_key , temperature=0)
 memory_dict = {}
 # global_token_stats = {
 #     "total_tokens_used": 0,
@@ -288,56 +289,42 @@ def example_response( ai_response):
             HumanMessagePromptTemplate.from_template(
                 """
               **Role:**
-            - Assume the persona of an answer generator, responsible for providing concise responses across various user inquiries.
-           
-            Question : {ai_response}
- 
-            **Step-by-Step Approach:**
- 
-           ### **Step 1: Initial Interaction**
-            - **Objective:** Establish a neutral and informative tone in the initial interaction while suggesting product categories.
- 
-            - **Guidelines:**
-            - Respond promptly with 1 to 2-word answers.
-            - Suggest relevant product categories in response to the user's inquiry about searching for a gift.
-            - Maintain a neutral tone to convey information without introducing unnecessary emotions.
-            - Avoid initiating small talk or unrelated information.
- 
-           
-           
- 
- 
-            ### **Step 2: Inquiry Response**
-            - **Objective:** Generate concise responses directly aligning with the user's inquiry.
- 
-            - **Guidelines:**
-            - Craft 8 responses, each consisting of 1 to 2 words.
-            - Ensure coherence in the generated responses for a seamless interaction.
-            - Tailor answers to match the specific context of the user's inquiry.
-            - Exclude unnecessary details or information that does not directly address the user's question.
- 
-            ### **Step 3: Clarity and Relevance**
-            - **Objective:** Provide clear and relevant responses, maintaining a declarative format.
- 
-            - **Guidelines:**
-            - when budget related questions asked then prompt only numerical values.
-            - Emphasize clarity in communication, avoiding ambiguity in responses.
-            - Link responses directly to the user's context, ensuring relevance.
-            - Exclude questions in the responses; maintain a declarative format for straightforward information delivery.
- 
-            ### **Step 4: Output Validation**
-            - **Objective:** Confirm context appropriateness and relevance to the user's intent.
- 
-            - **Guidelines:**
-            - Verify that the generated responses align with the user's inquiry.
-            - Ensure each response contributes meaningfully to the overall user interaction.
-            - Confirm the absence of questions in the responses to uphold the role of an answer generator.
- 
-            - **Compilation:**
-            - Assemble a set of 8 responses, each adhering strictly to the 1 to 2-word limit.
-            - Review the compiled responses for consistency, coherence, and adherence to the established guidelines.
- 
- 
+- Assume the persona of an answer generator, an efficient and knowledgeable virtual assistant committed to delivering concise, accurate, and user-focused responses across a wide range of inquiries.
+Question: {ai_response}
+
+**Step-by-Step Approach:**
+
+### **Step 1: Initial Interaction**
+- **Objective:** Establish a neutral and informative tone.
+
+- **Guidelines:**
+  - Respond promptly to user queries related to gift buying with concise, 1 to 2-word answers.
+  - Maintain a neutral tone to convey information without introducing unnecessary emotions.
+
+### **Step 2: Inquiry Response**
+- **Objective:** Provide clear and coherent responses, directly addressing the user's inquiries regarding gift preferences and purchases.
+
+- **Guidelines:**
+  - Craft 8 responses, each consisting of 1 to 2 words, ensuring coherence for a seamless interaction.
+  - Instead of posing questions, provide categories of products to guide the user in their gift selection.
+
+### **Step 3: Clarity and Relevance**
+- **Objective:** Emphasize clarity in communication when providing gift recommendations.
+
+- **Guidelines:**
+  - Present information concisely to facilitate an efficient decision-making process for gift purchases.
+  - Verify the context appropriateness and relevance of each response. Responses should offer product categories that align with the user's gift-buying intent.
+
+### **Step 4: Output Validation**
+- **Objective:** Verify the overall context appropriateness and relevance of the responses.
+
+- **Guidelines:**
+  - Review compiled sets of 8 responses, strictly adhering to the 1 to 2-word limit.
+  - Ensure that responses provide categories of products that align precisely with the user's inquiry. Responses should contribute meaningfully to the overall user interaction without introducing questions.
+
+
+`
+
                 \n{format_instructions}\n{ai_response}
  
                 """
@@ -571,6 +558,8 @@ def output_filteration(output_old, parser1, parser2 ,session_id):
     #get features from get attrivutes functions
     product = parser1.get('product name')
     flag = parser1.get('flag')
+    print("flag",flag)
+    print(type(flag))
     feedback = parser1.get('feedback')
    
     #get example responses from example fesponses functions
@@ -584,7 +573,8 @@ def output_filteration(output_old, parser1, parser2 ,session_id):
     #     product = ', '.join(product)
    
     # Check If the LLM Resposne is question or Recommendation
-    if flag == "True" or flag == "true":
+    if flag == "True" or flag == "true" or flag == True:
+        print("her-true")
         try:
             # Check if 'features' key is present in the dictionary
             if 'features' in parser1:
