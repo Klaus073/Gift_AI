@@ -18,35 +18,66 @@ secret = os.environ.get('SECRET_KEY')
 partner = os.environ.get('PARTNER_TAG')
 
 
+def filter_products(products):
+    filtered_products = []
+    skipped_count = 0
+
+    for product in products['search_result']['items']:
+        try:
+            # Check if all the required keys have non-None values
+            if (
+                product['images']['primary']['large']
+                and product['item_info']['features']
+                and product['offers']['listings'][0]['price']['display_amount']
+                and product['item_info']['title']['display_value']
+            ):
+                filtered_products.append(product)
+            else:
+                skipped_count += 1
+        except (KeyError, TypeError):
+            print("got here")
+            # Handle the case where the required keys are not present or have None values
+            skipped_count += 1
+
+    # Update the items with the filtered products
+    products['search_result']['items'] = filtered_products
+    print(skipped_count)
+    return products
+
+
 
 def get_item_with_lowest_sales_rank(items):
     # Initialize the variable to store the item with the lowest sales rank
     lowest_sales_rank_item = None
+    items = items["search_result"]["items"]
 
     # Iterate through each item in the list
-    for item in items:
-        # Check if the 'browse_node_info' key is present in the item
-        if 'browse_node_info' in item:
-            # Extract the 'browse_node_info' dictionary
-            browse_node_info = item['browse_node_info']
+    try:
+        for item in items:
+            browse_node_info = item.get('browse_node_info')
+            
+            if browse_node_info is None:
+                continue
+            # Check if browse_node_info is None
+            if browse_node_info is None:
+                raise ValueError(f"Exception: browse_node_info is None for item {item}")
 
-            # Check if the 'WebsiteSalesRank' key is present in 'browse_node_info'
+            # Check if 'WebsiteSalesRank' is present in browse_node_info
             if 'WebsiteSalesRank' in browse_node_info:
-                # Extract the sales rank value
-                sales_rank = browse_node_info['WebsiteSalesRank']['SalesRank']
+                website_sales_rank = browse_node_info.get('WebsiteSalesRank')
 
-                # Check if the sales rank value is not None
-                if sales_rank is not None:
-                    # Convert sales rank to integer
-                    sales_rank = int(sales_rank)
+                # Check if 'SalesRank' is present and not None
+                if website_sales_rank is not None and 'SalesRank' in website_sales_rank:
+                    sales_rank = int(website_sales_rank['SalesRank'])
 
-                    # Check if the current item has a lower sales rank than the previously found lowest
-                    if lowest_sales_rank_item is None or sales_rank < lowest_sales_rank_item['lowest_sales_rank']:
-                        # Update the lowest sales rank item
+                    if lowest_sales_rank_item is None or sales_rank < lowest_sales_rank_item.get('lowest_sales_rank', float('inf')):
                         lowest_sales_rank_item = {
                             'item': item,
                             'lowest_sales_rank': sales_rank
                         }
+
+    
+        
 
             # Check if 'browse_nodes' key is present in 'browse_node_info'
             elif 'browse_nodes' in browse_node_info:
@@ -73,10 +104,14 @@ def get_item_with_lowest_sales_rank(items):
                             'item': item,
                             'lowest_sales_rank': lowest_sales_rank
                         }
-
+    except TypeError as e:
+        print(f"been herer")
     # Return the item with the lowest sales rank
-    return lowest_sales_rank_item
-
+    # items_dict = {}
+    # final_list = []
+    # final_list.append(lowest_sales_rank_item.get('item', {}))
+    # items_dict["items"] = final_list
+    return lowest_sales_rank_item.get('item', {})
 
 def get_lowest_sales_rank_asin(json_data):
     # Parse the JSON data
@@ -126,8 +161,8 @@ def get_items(item_id):
         GetItemsResource.ITEMINFO_TITLE,
         GetItemsResource.OFFERS_LISTINGS_PRICE,
         GetItemsResource.ITEMINFO_FEATURES,
-        GetItemsResource.IMAGES_PRIMARY_LARGE,
-        GetItemsResource.IMAGES_VARIANTS_LARGE
+        GetItemsResource.IMAGES_PRIMARY_LARGE
+        
     ]
 
     """ Forming request """
@@ -218,7 +253,10 @@ def search_items(product):
         
         SearchItemsResource.IMAGES_PRIMARY_LARGE,
         
-        
+        SearchItemsResource.ITEMINFO_TITLE,
+        SearchItemsResource.OFFERS_LISTINGS_PRICE,
+        SearchItemsResource.ITEMINFO_FEATURES,
+        SearchItemsResource.IMAGES_PRIMARY_LARGE,
         
         SearchItemsResource.BROWSENODEINFO_BROWSENODES_SALESRANK
  
@@ -291,50 +329,78 @@ def getitems(product   ):
     return api_output_dict
  
 default = ["SPIDER" ]
+# def multiple_items(products):
+#     # print("here")
+#     all_prod = []
+#     asin_list = []
+#     products_json={}
+#     if isinstance(products, list):
+#         for i in products:
+#             prod = search_items(i)
+#             # print("here1")
+            
+#             prod_asin = get_lowest_sales_rank_asin(prod)
+#             asin_list.append(str(prod_asin))
+#         # print("asin",asin_list)
+#         # print(len(asin_list))    
+#         detailed_prod = get_items(asin_list)
+        
+#         serialized_detailed_prod = simplify_json(detailed_prod)
+#         api_output=serialized_detailed_prod[""]
+#         final_serialized_detailed_prod= api_output.to_dict()
+#         # print("--------------------------")
+#         # print(final_serialized_detailed_prod)
+#         # print("--------------------------")
+#             # print(serialized_detailed_prod)
+        
+        
+#         item_result = final_serialized_detailed_prod.get('items_result')
+
+#         if item_result:
+#             items = item_result.get('items', [])
+
+#             all_prod.extend(items)
+#         # print(all_prod)
+#         products_json = {
+#             "search_result": {
+#                 "items": all_prod,
+#                 "total_result_count": len(all_prod)
+#             }
+#         }
+#         # print(products_json)
+#         return products_json
+#     else:
+#         prod = search_items(products)
+#         return prod
+
+
 def multiple_items(products):
-    # print("here")
     all_prod = []
-    asin_list = []
-    products_json={}
+    
     if isinstance(products, list):
         for i in products:
-            prod = search_items(i)
-            # print("here1")
-            
-            prod_asin = get_lowest_sales_rank_asin(prod)
-            asin_list.append(str(prod_asin))
-        # print("asin",asin_list)
-        # print(len(asin_list))    
-        detailed_prod = get_items(asin_list)
+            try:
+                final_item = get_item_with_lowest_sales_rank(filter_products(search_items(i)))
+                all_prod.append(final_item)
+            except ValueError as ve:
+                # Handle the specific exception, if needed
+                pass
+            except Exception as e:
+                # Handle the general exception, if needed
+                pass
         
-        serialized_detailed_prod = simplify_json(detailed_prod)
-        api_output=serialized_detailed_prod[""]
-        final_serialized_detailed_prod= api_output.to_dict()
-        # print("--------------------------")
-        # print(final_serialized_detailed_prod)
-        # print("--------------------------")
-            # print(serialized_detailed_prod)
-        
-        
-        item_result = final_serialized_detailed_prod.get('items_result')
-
-        if item_result:
-            items = item_result.get('items', [])
-
-            all_prod.extend(items)
-        # print(all_prod)
-        products_json = {
-            "search_result": {
-                "items": all_prod,
-                "total_result_count": len(all_prod)
-            }
+    products_json = {
+        "search_result": {
+            "items": all_prod,
+            "total_result_count": len(all_prod)
         }
-        # print(products_json)
-        return products_json
-    else:
-        prod = search_items(products)
-        return prod
+    }
+    
+    return products_json
+
     
 # print(multiple_items(default))
 # print(get_items(["0399590528"]))
 # LOOKING FOR BOOKS RECOMMENDATIONS , NEW TO BOOK READING , BUDGET $500 , ANY GENRE , OPEN TO RECOMMENDATIONS
+# defaul =  ['Jane Austen Quilt Kit', 'Jane Austen Silhouette Framed Art', 'Jane Austen Charm Bracelet', 'Jane Austen Themed Tea Set']
+# print(multiple_items(defaul))
