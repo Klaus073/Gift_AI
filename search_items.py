@@ -35,13 +35,13 @@ def filter_products(products):
             else:
                 skipped_count += 1
         except (KeyError, TypeError):
-            print("got here")
+            # print("got here")
             # Handle the case where the required keys are not present or have None values
             skipped_count += 1
 
     # Update the items with the filtered products
     products['search_result']['items'] = filtered_products
-    print(skipped_count)
+    # print(skipped_count)
     return products
 
 
@@ -139,78 +139,7 @@ def get_lowest_sales_rank_asin(json_data):
     return lowest_sales_rank_asin
 
 
-def get_items(item_id):
-    access_key = access
-    secret_key = secret
-    partner_tag = partner
 
-    host = "webservices.amazon.com"
-    region = "us-east-1"
-
-    default_api = DefaultApi(access_key=access_key, secret_key=secret_key, host=host, region=region)
-
-    """ Request initialization"""
-
-    """ Choose item id(s) """
-    item_ids = item_id
-    print(item_ids)
-
-    """ Choose resources you want from GetItemsResource enum """
-    """ For more details, refer: https://webservices.amazon.com/paapi5/documentation/get-items.html#resources-parameter """
-    get_items_resource = [
-        GetItemsResource.ITEMINFO_TITLE,
-        GetItemsResource.OFFERS_LISTINGS_PRICE,
-        GetItemsResource.ITEMINFO_FEATURES,
-        GetItemsResource.IMAGES_PRIMARY_LARGE
-        
-    ]
-
-    """ Forming request """
-
-    response = None  # Initialize response here
-
-    try:
-        get_items_request = GetItemsRequest(
-            partner_tag=partner_tag,
-            partner_type=PartnerType.ASSOCIATES,
-            marketplace="www.amazon.com",
-            condition=Condition.NEW,
-            item_ids=item_ids,
-            resources=get_items_resource,
-        )
-    except ValueError as exception:
-        print("Error in forming GetItemsRequest: ", exception)
-        return
-    response = None
-    try:
-        """ Sending request """
-        response = default_api.get_items(get_items_request)
-
-        print("API called Successfully")
-        # print("Complete Response:", response)
-
-       
-
-        if response.errors is not None:
-            print("\nPrinting Errors:\nPrinting First Error Object from list of Errors")
-            print("Error code", response.errors[0].code)
-            print("Error message", response.errors[0].message)
-
-    except ApiException as exception:
-        print("Error calling PA-API 5.0!")
-        print("Status code:", exception.status)
-        print("Errors :", exception.body)
-        print("Request ID:", exception.headers["x-amzn-RequestId"])
-
-    except TypeError as exception:
-        print("TypeError :", exception)
-
-    except ValueError as exception:
-        print("ValueError :", exception)
-
-    except Exception as exception:
-        print("Exception :", exception)
-    return response if response and not response.errors else None
  
  
 def search_items(product):
@@ -328,50 +257,6 @@ def getitems(product   ):
     api_output_dict= api_output.to_dict()
     return api_output_dict
  
-default = ["SPIDER" ]
-# def multiple_items(products):
-#     # print("here")
-#     all_prod = []
-#     asin_list = []
-#     products_json={}
-#     if isinstance(products, list):
-#         for i in products:
-#             prod = search_items(i)
-#             # print("here1")
-            
-#             prod_asin = get_lowest_sales_rank_asin(prod)
-#             asin_list.append(str(prod_asin))
-#         # print("asin",asin_list)
-#         # print(len(asin_list))    
-#         detailed_prod = get_items(asin_list)
-        
-#         serialized_detailed_prod = simplify_json(detailed_prod)
-#         api_output=serialized_detailed_prod[""]
-#         final_serialized_detailed_prod= api_output.to_dict()
-#         # print("--------------------------")
-#         # print(final_serialized_detailed_prod)
-#         # print("--------------------------")
-#             # print(serialized_detailed_prod)
-        
-        
-#         item_result = final_serialized_detailed_prod.get('items_result')
-
-#         if item_result:
-#             items = item_result.get('items', [])
-
-#             all_prod.extend(items)
-#         # print(all_prod)
-#         products_json = {
-#             "search_result": {
-#                 "items": all_prod,
-#                 "total_result_count": len(all_prod)
-#             }
-#         }
-#         # print(products_json)
-#         return products_json
-#     else:
-#         prod = search_items(products)
-#         return prod
 
 
 def multiple_items(products):

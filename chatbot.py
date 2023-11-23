@@ -558,8 +558,8 @@ def output_filteration(output_old, parser1, parser2 ,session_id):
     #get features from get attrivutes functions
     product = parser1.get('product name')
     flag = parser1.get('flag')
-    print("flag",flag)
-    print(type(flag))
+    # print("flag",flag)
+    # print(type(flag))
     feedback = parser1.get('feedback')
    
     #get example responses from example fesponses functions
@@ -574,7 +574,7 @@ def output_filteration(output_old, parser1, parser2 ,session_id):
    
     # Check If the LLM Resposne is question or Recommendation
     if flag == "True" or flag == "true" or flag == True:
-        print("her-true")
+        # print("her-true")
         try:
             # Check if 'features' key is present in the dictionary
             if 'features' in parser1:
@@ -615,14 +615,14 @@ def output_filteration(output_old, parser1, parser2 ,session_id):
         if product == '':
             product ='gift'
        
-        print("perfect subcategory: " , sub)
+        # print("perfect subcategory: " , sub)
  
         try:
             title = conversation_title(memory_dict[session_id].buffer)
             new = title.get('Title')
         except Exception as e:
             new = None
-        print("title :",new)
+        # print("title :",new)
        
         try:
             amazon = get_products( product )
@@ -666,9 +666,9 @@ def main_input(user_input, user_session_id):
     except Exception as e:
         parser2 = {"example": ['']}
     # print(global_token_stats)
-    print(output)
-    print(parser1)
-    print(parser2)
+    # print(output)
+    # print(parser1)
+    # print(parser2)
  
     final_output = output_filteration( output, parser1, parser2, user_session_id)
  
