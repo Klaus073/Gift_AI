@@ -19,6 +19,65 @@ partner = os.environ.get('PARTNER_TAG')
 
 
 
+def get_item_with_lowest_sales_rank(items):
+    # Initialize the variable to store the item with the lowest sales rank
+    lowest_sales_rank_item = None
+
+    # Iterate through each item in the list
+    for item in items:
+        # Check if the 'browse_node_info' key is present in the item
+        if 'browse_node_info' in item:
+            # Extract the 'browse_node_info' dictionary
+            browse_node_info = item['browse_node_info']
+
+            # Check if the 'WebsiteSalesRank' key is present in 'browse_node_info'
+            if 'WebsiteSalesRank' in browse_node_info:
+                # Extract the sales rank value
+                sales_rank = browse_node_info['WebsiteSalesRank']['SalesRank']
+
+                # Check if the sales rank value is not None
+                if sales_rank is not None:
+                    # Convert sales rank to integer
+                    sales_rank = int(sales_rank)
+
+                    # Check if the current item has a lower sales rank than the previously found lowest
+                    if lowest_sales_rank_item is None or sales_rank < lowest_sales_rank_item['lowest_sales_rank']:
+                        # Update the lowest sales rank item
+                        lowest_sales_rank_item = {
+                            'item': item,
+                            'lowest_sales_rank': sales_rank
+                        }
+
+            # Check if 'browse_nodes' key is present in 'browse_node_info'
+            elif 'browse_nodes' in browse_node_info:
+                # Initialize variable to store the lowest sales rank among browse nodes
+                lowest_sales_rank = None
+
+                # Iterate through each browse node
+                for node in browse_node_info['browse_nodes']:
+                    # Check if 'sales_rank' key is present and the value is not None
+                    if 'sales_rank' in node and node['sales_rank'] is not None:
+                        # Convert sales rank to integer
+                        current_sales_rank = int(node['sales_rank'])
+
+                        # Check if the current sales rank is lower than the previously found lowest
+                        if lowest_sales_rank is None or current_sales_rank < lowest_sales_rank:
+                            lowest_sales_rank = current_sales_rank
+
+                # Check if there is a valid lowest sales rank among browse nodes
+                if lowest_sales_rank is not None:
+                    # Check if the current item has a lower sales rank than the previously found lowest
+                    if lowest_sales_rank_item is None or lowest_sales_rank < lowest_sales_rank_item['lowest_sales_rank']:
+                        # Update the lowest sales rank item
+                        lowest_sales_rank_item = {
+                            'item': item,
+                            'lowest_sales_rank': lowest_sales_rank
+                        }
+
+    # Return the item with the lowest sales rank
+    return lowest_sales_rank_item
+
+
 def get_lowest_sales_rank_asin(json_data):
     # Parse the JSON data
     data = json_data
@@ -95,37 +154,7 @@ def get_items(item_id):
         print("API called Successfully")
         # print("Complete Response:", response)
 
-        # """ Parse response """
-        # if response.items_result is not None:
-        #     print("Printing all item information in ItemsResult:")
-        #     response_list = parse_response(response.items_result.items)
-        #     for item_id in item_ids:
-        #         print("Printing information about the item_id: ", item_id)
-        #         if item_id in response_list:
-        #             item = response_list[item_id]
-        #             if item is not None:
-        #                 if item.asin is not None:
-        #                     print("ASIN: ", item.asin)
-        #                 if item.detail_page_url is not None:
-        #                     print("DetailPageURL: ", item.detail_page_url)
-        #                 if (
-        #                     item.item_info is not None
-        #                     and item.item_info.title is not None
-        #                     and item.item_info.title.display_value is not None
-        #                 ):
-        #                     print("Title: ", item.item_info.title.display_value)
-        #                 if (
-        #                     item.offers is not None
-        #                     and item.offers.listings is not None
-        #                     and item.offers.listings[0].price is not None
-        #                     and item.offers.listings[0].price.display_amount is not None
-        #                 ):
-        #                     print(
-        #                         "Buying Price: ",
-        #                         item.offers.listings[0].price.display_amount,
-        #                     )
-        #         else:
-        #             print("Item not found, check errors")
+       
 
         if response.errors is not None:
             print("\nPrinting Errors:\nPrinting First Error Object from list of Errors")
