@@ -17,7 +17,7 @@ from count_tokens import extract_token_stats
 from search_items import search_items , multiple_items
 import tiktoken
 api_key = os.environ.get('OPENAI_API_KEY')
-llm = ChatOpenAI(model_name='gpt-4-0613',openai_api_key=api_key , temperature=0)
+llm = ChatOpenAI(model_name='gpt-4-1106-preview',openai_api_key=api_key , temperature=0)
 llm2 = ChatOpenAI(openai_api_key=api_key , temperature=0)
 memory_dict = {}
 # global_token_stats = {
@@ -549,77 +549,22 @@ def get_products( product  ):
  
  
  
-def output_filteration(output_old, parser1, parser2 ,session_id):
+def output_filteration(output_old, parser1  ,session_id):
+    json = {}
    
-    #change tone of raw message
-    try:
-        output = change_tone( output_old)
-        output = output.get('sentence')
-    except Exception as e:
-        output = output_old
- 
     #get features from get attrivutes functions
     product = parser1.get('product name')
     flag = parser1.get('flag')
-    # print("flag",flag)
-    # print(type(flag))
+    
     feedback = parser1.get('feedback')
-   
-    #get example responses from example fesponses functions
-    example_response = parser2.get('example')
-    if example_response == ['']:
-        example_response = []
-    #Pre final json
-    json = {}
-    # check if the product is list of products or just a string
-    # if isinstance(product, list):
-    #     product = ', '.join(product)
-   
-    # Check If the LLM Resposne is question or Recommendation
+
     if flag == "True" or flag == "true" or flag == True:
-        # print("her-true")
-        try:
-            # Check if 'features' key is present in the dictionary
-            if 'features' in parser1:
-                features_data = parser1['features']
- 
-                # Check if 'min' key is present in the features data
-                if 'min' in features_data:
-                    min_value = features_data['min']
- 
-                    # Check if the min value contains a dollar sign
-                    if '$' in min_value:
-                        # Remove the dollar sign and convert the value to an integer
-                        min_value = int(min_value.replace('$', ''))
-                # Check if 'max' key is present in the features data
-                if 'max' in features_data:
-                    max_value = features_data['max']
- 
-                    # Check if the max value contains a dollar sign
-                    if '$' in max_value:
-                        # Remove the dollar sign and convert the value to an integer
-                        max_value = int(max_value.replace('$', ''))
-        except Exception as e:
-            min_value = 10
-            max_value = 100
-       
-        try:
-            output = "Ok Let me Brain Storm some ideas .... "
-            output = change_tone( output)
-            output = output.get('sentence')
-        except Exception as e:
-            output = "Ok Let me Brain Storm some ideas .... "
- 
-        try:
-            sub = product_response(product)
-        except Exception as e:
-            sub = {"Category":"" ,"Subcategory" : "" }
- 
+
+        output = "Ok Let me Brain Storm some ideas .... "
+
         if product == '':
-            product ='gift'
-       
-        # print("perfect subcategory: " , sub)
- 
+            product ='gift' 
+
         try:
             title = conversation_title(memory_dict[session_id].buffer)
             new = title.get('Title')
@@ -638,16 +583,95 @@ def output_filteration(output_old, parser1, parser2 ,session_id):
         json["result"] = output
         json["session_id"] = session_id
         json["Title"] = new
-        json["feedback"] = feedback
-        # insert_global_token_stats(global_token_stats)
- 
+        json["feedback"] = feedback   
+
     else:
- 
+        try:
+            output = change_tone( output_old)
+            output = output.get('sentence')
+        except Exception as e:
+            output = output_old
+        try:
+            parser2 = example_response(output_old)
+        except Exception as e:
+            print("here", str(e))
+            parser2 = {"example": ['']}
+
+        # get example responses from example responses function
+        example_answers = parser2.get('example', [])
+        if example_answers == ['']:
+            example_answers= []
+
         json["Product"] = {}
         json["result"] = output
-        json["example"] = example_response
+        json["example"] = example_answers
         json["session_id"] = session_id
-        # json["Title"] = "None"
+    # #change tone of raw message
+    # try:
+    #     output = change_tone( output_old)
+    #     output = output.get('sentence')
+    # except Exception as e:
+    #     output = output_old
+ 
+    # #get features from get attrivutes functions
+    # product = parser1.get('product name')
+    # flag = parser1.get('flag')
+    # # print("flag",flag)
+    # # print(type(flag))
+    # feedback = parser1.get('feedback')
+   
+    # #get example responses from example fesponses functions
+    # example_response = parser2.get('example')
+    # if example_response == ['']:
+    #     example_response = []
+    # #Pre final json
+    # json = {}
+    # # check if the product is list of products or just a string
+    # # if isinstance(product, list):
+    # #     product = ', '.join(product)
+   
+    # # Check If the LLM Resposne is question or Recommendation
+    # if flag == "True" or flag == "true" or flag == True:
+        
+       
+        
+    #     output = "Ok Let me Brain Storm some ideas .... "
+ 
+        
+ 
+    #     if product == '':
+    #         product ='gift'
+       
+    #     # print("perfect subcategory: " , sub)
+ 
+    #     try:
+    #         title = conversation_title(memory_dict[session_id].buffer)
+    #         new = title.get('Title')
+    #     except Exception as e:
+    #         new = None
+    #     # print("title :",new)
+       
+    #     try:
+    #         amazon = get_products( product )
+    #     except Exception as e:
+    #         print("error from amazon",e)
+ 
+ 
+    #     json["Product"] = amazon
+    #     json["example"] = []
+    #     json["result"] = output
+    #     json["session_id"] = session_id
+    #     json["Title"] = new
+    #     json["feedback"] = feedback
+    #     # insert_global_token_stats(global_token_stats)
+ 
+    # else:
+ 
+    #     json["Product"] = {}
+    #     json["result"] = output
+    #     json["example"] = example_response
+    #     json["session_id"] = session_id
+    #     # json["Title"] = "None"
  
     return json
  
@@ -664,15 +688,13 @@ def main_input(user_input, user_session_id):
         parser1 = get_attributes( output)
     except Exception as e:
         parser1 = {"product": "" , "flag": "" , "features": {} , "feedback" : ""}
-    try:
-        parser2 = example_response( output)
-    except Exception as e:
-        parser2 = {"example": ['']}
-    # print(global_token_stats)
+    
+    
+        
     # print(output)
     # print(parser1)
     # print(parser2)
  
-    final_output = output_filteration( output, parser1, parser2, user_session_id)
+    final_output = output_filteration( output, parser1, user_session_id)
  
     return final_output
