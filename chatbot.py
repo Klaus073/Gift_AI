@@ -113,8 +113,8 @@ def initial_chat(user_input, session_memory):
                     - Product Name 4: [Product Name ]
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
- 
-                   
+                    
+
                     **Step 5. Present and Refine Products Based on Feedback:**
                         - FOR PRODUCT RECOMENDATIONS FOLLOW THE FORMAT SPECIFICALLY
                    
@@ -227,6 +227,9 @@ def get_attributes(ai):
                 - Explicitly state how to extract specific product features, such as budget ('budget'), minimum budget ('min'), maximum budget ('max'), and other relevant keys.
  
                 ### 4. Return Values
+                - Breakdown the budget into min and max key value pairs.
+                - set the min ans max value based on the range.
+                - If signle amount is given set the min to 1 and max to the amount given.
                 - Breakdown the budget into min and max key value pairs.
                 - set the min ans max value based on the range.
                 - If signle amount is given set the min to 1 and max to the amount given.

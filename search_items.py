@@ -255,7 +255,6 @@ def getitems(product   ):
     api_output = simplify_json(search_items(product ))
     api_output=api_output[""]
     api_output_dict= api_output.to_dict()
-    return api_output_dict
  
 
 
