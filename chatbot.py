@@ -60,31 +60,42 @@ def initial_chat(user_input, session_memory):
                     **Role:**
                     - Embody the persona of "THINK GIFT," a friendly assistant dedicated to helping users discover the perfect gift.
                     - Engage users in lively conversations, posing follow-up questions, and understanding their gift preferences.
-                    - Maintain a positive and helpful tone, playing the role of a virtual gift advisor.
- 
-                    **Example Follow-up Questions:**
-                    1. What budget are you considering for the gift?
-                    2. Share any specific interests or requirements for the product.
- 
+                    - Maintain tone defined below, playing the role of a virtual gift advisor.
+
+                    ** Tone**
+                    Generate responses in a warm, friendly, and helpful tone. \
+                    Expressing enthusiasm and interest in the user's input or topic. \
+                    Provide information or suggestions with a positive and engaging demeanor.\
+                    You will adjust the tones based on the context.
+                    Use responsive emojis in the response to make it exciting.\    
+                 
+                    
                     **Let's Do It Step by Step:**
- 
-                    **Step 1. Ensure User Understanding:**
+
+                    **Step 1. Ask One Follow-up At a Time:**
                     - Begin by asking one follow-up question to maintain a conversational flow.
                     - Limit the number of questions asked per interaction to one.
+ 
+                    **Step 2. Ensure User Understanding:**
+                    
                     - Ask follow-up questions by providing sample answers.
                     - If a user's input suggests adult preferences, offer assistance accordingly.
                     - Assume the existence of a user-requested unfamiliar product and proceed with information gathering.
  
-                    **Step 2. Follow-up Questioning with Record:**
+                    **Step 3. Follow-up Questioning with Record:**
                     - Engage in follow-up questions to understand user preferences.
                     - Keep a record of the previous response to guide the conversation.
                     - Emphasize clarity but allow flexibility in the conversation.
  
-                    **Step 3. Gather Information:**
+                    **Step 4. Gather Information:**
                     - Identify the category from user input and ask relative questions to that category, going in-depth if needed.
                     - Collect necessary information about the product the user is interested in.
                     - If the budget response is vague, kindly ask for a specific range.
                     - Ensure a comprehensive understanding of their requirements.
+
+                    **Step 5. Follow-up Questions Output Instructions:**
+                    - Follow step 1.
+                    - Follow-up question must not exceed 1 line. 
  
                     **Note for Handling Budget Exceedance:**
                     - If the user's request suggests a product or category beyond the defined budget, inform the user politely.
@@ -94,7 +105,6 @@ def initial_chat(user_input, session_memory):
                     **Note for Introducing New Products and Categories:**
                     - When the user expresses interest in a new product and category, prompt them to redefine the budget for the specific request.
                     - This ensures that the recommendations align with the user's budget for each unique preference.
- 
  
                     **Step 4. Recommendation Format Summary, Recommendation:**
  
@@ -116,29 +126,14 @@ def initial_chat(user_input, session_memory):
                     
 
                     **Step 5. Present and Refine Products Based on Feedback:**
-                        - FOR PRODUCT RECOMENDATIONS FOLLOW THE FORMAT SPECIFICALLY
-                   
-                    ###Recommendation Format:###
-                    - Product Name 1: [Product Name ]
-                    - Budget Provided: [Budget Provided]
-                    - Preference: [Specific preferences]
-                    - Product Name 2: [Product Name ]
-                    - Budget Provided: [Budget Provided]
-                    - Preference: [Specific preferences]
-                    - Product Name 3: [Product Name ]
-                    - Budget Provided: [Budget Provided]
-                    - Preference: [Specific preferences]
-                    - Product Name 4: [Product Name ]
-                    - Budget Provided: [Budget Provided]
-                    - Preference: [Specific preferences]
- 
+                        
                     - Present four product recommendations based on gathered information.
                     - Ask for user feedback on the recommendations.
                     - If the user expresses interest in seeing more options, provide another set of four recommendations.
                     - Continuously refine product suggestions based on feedback.
                     - Repeat the process, presenting refined recommendations four at a time and seeking feedback until the user indicates satisfaction or makes specific changes to preferences.
                     - Maintain a positive and engaging tone throughout the interaction.
- 
+                    
                     """
             ),
             MessagesPlaceholder(variable_name="chat_history"),
@@ -169,6 +164,135 @@ def initial_chat(user_input, session_memory):
     #     global_token_stats[key] += token_info[key]
     # insert_global_token_stats(token_info)
     return session_memory.buffer[-1].content
+
+
+def question_or_recommendation(ai_response):
+    response_schemas = [ResponseSchema(name="flag", description="bool value true or false")]
+    output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
+    format_instructions = output_parser.get_format_instructions()
+
+    flag_prompt = ChatPromptTemplate(
+        messages=[
+            HumanMessagePromptTemplate.from_template(
+                """
+                **Role:**
+                    Imagine you're a skilled text analyzer tasked with determining if responses suggest questions or product recommendations.
+
+                Response = {ai_response}
+                Lets do it step by step:
+                **Step 1: Careful Analysis**
+                - Examine the provided response thoroughly.
+
+                **Step 2: Identify Response Type**
+                - Clearly determine if the response is inquiring about user preferences, providing a product recommendation, or asking recommendation questions.
+                - Check for sentence structure ending with a question mark or containing interrogative words.
+                - Search for phrases expressing preference or advice.
+
+                **Step 3: Binary Flag Implementation**
+                - Use a binary flag to capture AI behavior.
+                - If the response suggests products, set the flag to 'True'; otherwise, set it to 'False.'
+
+                **Step 4: Return the Flag**
+                - Provide the resulting flag as the output.
+                - Ensure the flag aligns with the type of detected response.
+                - Adjust rules based on the conversational context and user-specific patterns.
+                
+                 \n{format_instructions}\n{ai_response}
+ 
+    """
+            )
+        ],
+        input_variables=["ai_response"],
+        partial_variables={"format_instructions": format_instructions}
+    )
+    _input = flag_prompt.format_prompt(ai_response=ai_response)
+    with get_openai_callback() as cb:
+        result = llm(_input.to_messages())
+        # print("get attributes",cb)
+        token_info = {
+        "Prompt Function" : "Title Extraction",
+        "total_tokens_used": cb.total_tokens,
+        "prompt_tokens_used": cb.prompt_tokens,
+        "completion_tokens_used": cb.completion_tokens,
+        "successful_requests": cb.successful_requests,
+        "total_cost_usd": cb.total_cost,
+    }
+ 
+ 
+    # Update global token stats
+    # Update global token stats
+    # for key in global_token_stats:
+    #     global_token_stats[key] += token_info[key]
+    attr = output_parser.parse(result.content)
+    # insert_global_token_stats(token_info)
+ 
+    return attr
+
+def products_and_features(ai_products):
+    response_schemas = [ ResponseSchema(name="product name", description="list of product item"),
+        ResponseSchema(name="budget", description="a dictionary with keys and values of features"),
+        ResponseSchema(name="feedback", description="a descriptive sentence asking feedback on prefrences")]
+    output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
+    format_instructions = output_parser.get_format_instructions()
+
+    flag_prompt = ChatPromptTemplate(
+        messages=[
+            HumanMessagePromptTemplate.from_template(
+                """
+                **Role:**
+                    Imagine you're a products and its feature analyzer tasked to extract the recommended products in the response.
+
+                Response = {ai_products}
+
+                Lets do it step by step:
+                Step 1:
+                - Carefully analyze the products given.
+                Step 2:
+                - Extract the recommended product item names
+                Step 3:
+                - Extract the budget.
+                - if the budget is a vague value then convert into numerical value accordingly
+                Step 4:
+                - Breakdown the budget into min and max key value pairs.
+                - set the min ans max value based on the range.
+                - If signle amount is given set the min to 1 and max to the amount given.
+                - Store the amount withut dollar sign.
+                - Extract the feedback mentioned in the response
+                Step 4:
+                Return all the product item in a list named as 'product name' , provided budget , min amount , max amount in a dictionary named as 'budget' and feedback as sentence in variable named as 'feedback'.
+               
+                 \n{format_instructions}\n{ai_products}
+ 
+    """
+            )
+        ],
+        input_variables=["ai_products"],
+        partial_variables={"format_instructions": format_instructions}
+    )
+    _input = flag_prompt.format_prompt(ai_products=ai_products)
+    with get_openai_callback() as cb:
+        result = llm(_input.to_messages())
+        # print("get attributes",cb)
+        token_info = {
+        "Prompt Function" : "Title Extraction",
+        "total_tokens_used": cb.total_tokens,
+        "prompt_tokens_used": cb.prompt_tokens,
+        "completion_tokens_used": cb.completion_tokens,
+        "successful_requests": cb.successful_requests,
+        "total_cost_usd": cb.total_cost,
+    }
+ 
+ 
+    # Update global token stats
+    # Update global token stats
+    # for key in global_token_stats:
+    #     global_token_stats[key] += token_info[key]
+    attr = output_parser.parse(result.content)
+    # insert_global_token_stats(token_info)
+ 
+    return attr
+
+
  
 def get_attributes(ai):
     global COUNTER  # Add this line if you want to modify the global variable
@@ -295,38 +419,28 @@ def example_response( ai_response):
 - Assume the persona of an answer generator, an efficient and knowledgeable virtual assistant committed to delivering concise, accurate, and user-focused responses across a wide range of inquiries.
 Question: {ai_response}
 
-**Step-by-Step Approach:**
+**Lets do it step by step:**
 
-### **Step 1: Initial Interaction**
-- **Objective:** Establish a neutral and informative tone.
+**Steps for Generating Sample Answers:**
 
-- **Guidelines:**
-  - Respond promptly to user queries related to gift buying with concise, 1 to 2-word answers.
-  - Maintain a neutral tone to convey information without introducing unnecessary emotions.
+**Step 1. Analyze the Question:**
+- Carefully examine the question to fully understand its meaning.
+- Consider the context to ensure accurate and relevant responses.
 
-### **Step 2: Inquiry Response**
-- **Objective:** Provide clear and coherent responses, directly addressing the user's inquiries regarding gift preferences and purchases.
+**Step 2. Generate 8 Responses:**
+- Create concise responses with a maximum of 1 to 2 words each.
+- Ensure the responses are literal and directly address the question.
+- Avoid forming questions in the responses.
+- Maintain alignment between all 8 responses.
 
-- **Guidelines:**
-  - Craft 8 responses, each consisting of 1 to 2 words, ensuring coherence for a seamless interaction.
-  - Instead of posing questions, provide categories of products to guide the user in their gift selection.
+**Step 3. Verify Context Alignment:**
+- After generating responses, cross-verify them with existing knowledge.
+- Ensure that the answers align with the context of the original question.
+- Confirm that each response is relevant to the preferences of the product.
 
-### **Step 3: Clarity and Relevance**
-- **Objective:** Emphasize clarity in communication when providing gift recommendations.
+**Step 4. Return as 'example' List:**
+- Compile the 8 responses into a list named 'example' for easy reference.
 
-- **Guidelines:**
-  - Present information concisely to facilitate an efficient decision-making process for gift purchases.
-  - Verify the context appropriateness and relevance of each response. Responses should offer product categories that align with the user's gift-buying intent.
-
-### **Step 4: Output Validation**
-- **Objective:** Verify the overall context appropriateness and relevance of the responses.
-
-- **Guidelines:**
-  - Review compiled sets of 8 responses, strictly adhering to the 1 to 2-word limit.
-  - Ensure that responses provide categories of products that align precisely with the user's inquiry. Responses should contribute meaningfully to the overall user interaction without introducing questions.
-
-
-`
 
                 \n{format_instructions}\n{ai_response}
  
@@ -549,48 +663,77 @@ def get_products( product  ):
  
  
  
-def output_filteration(output_old, parser1  ,session_id):
+def output_filteration(output_old, flag  ,session_id):
     json = {}
    
-    #get features from get attrivutes functions
-    product = parser1.get('product name')
-    flag = parser1.get('flag')
+    # #get features from get attrivutes functions
+    # product = parser1.get('product name')
+    # flag = parser1.get('flag')
     
-    feedback = parser1.get('feedback')
+    # feedback = parser1.get('feedback')
 
     if flag == "True" or flag == "true" or flag == True:
+        try:
+            parser1 = products_and_features( output_old)
+        except Exception as e:
+            parser1 = {"product": [] , "features": {} , "feedback" : ""}
 
-        output = "Ok Let me Brain Storm some ideas .... "
+        product = parser1.get('product name')
+        # print(parser1)
+    
+        feedback = parser1.get('feedback')    
+
+        output = "Certainly, allow me to engage in a brainstorming session to generate ideas. 🧠💡 "
 
         if product == '':
             product ='gift' 
 
         try:
-            title = conversation_title(memory_dict[session_id].buffer)
-            new = title.get('Title')
-        except Exception as e:
-            new = None
-        # print("title :",new)
-       
-        try:
             amazon = get_products( product )
         except Exception as e:
             print("error from amazon",e)
+        
+        if len(amazon["search_result"]["items"]) == 0:
+            try:
+                parser2 = example_response(output_old)
+            except Exception as e:
+                print("here", str(e))
+                parser2 = {"example": ['']}
+
+            # get example responses from example responses function
+            example_answers = parser2.get('example', [])
+            if example_answers == ['']:
+                example_answers= []
+
+            json["Product"] = {}
+            json["result"] = output_old
+            json["example"] = example_answers
+            json["session_id"] = session_id
+        else:
+
+            try:
+                title = conversation_title(memory_dict[session_id].buffer)
+                new = title.get('Title')
+            except Exception as e:
+                new = None
+        # print("title :",new)
+       
+        
  
  
-        json["Product"] = amazon
-        json["example"] = []
-        json["result"] = output
-        json["session_id"] = session_id
-        json["Title"] = new
-        json["feedback"] = feedback   
+            json["Product"] = amazon
+            json["example"] = []
+            json["result"] = output
+            json["session_id"] = session_id
+            json["Title"] = new
+            json["feedback"] = feedback   
 
     else:
-        try:
-            output = change_tone( output_old)
-            output = output.get('sentence')
-        except Exception as e:
-            output = output_old
+        # try:
+        #     output = change_tone( output_old)
+        #     output = output.get('sentence')
+        # except Exception as e:
+        #     output = output_old
         try:
             parser2 = example_response(output_old)
         except Exception as e:
@@ -603,75 +746,10 @@ def output_filteration(output_old, parser1  ,session_id):
             example_answers= []
 
         json["Product"] = {}
-        json["result"] = output
+        json["result"] = output_old
         json["example"] = example_answers
         json["session_id"] = session_id
-    # #change tone of raw message
-    # try:
-    #     output = change_tone( output_old)
-    #     output = output.get('sentence')
-    # except Exception as e:
-    #     output = output_old
- 
-    # #get features from get attrivutes functions
-    # product = parser1.get('product name')
-    # flag = parser1.get('flag')
-    # # print("flag",flag)
-    # # print(type(flag))
-    # feedback = parser1.get('feedback')
-   
-    # #get example responses from example fesponses functions
-    # example_response = parser2.get('example')
-    # if example_response == ['']:
-    #     example_response = []
-    # #Pre final json
-    # json = {}
-    # # check if the product is list of products or just a string
-    # # if isinstance(product, list):
-    # #     product = ', '.join(product)
-   
-    # # Check If the LLM Resposne is question or Recommendation
-    # if flag == "True" or flag == "true" or flag == True:
-        
-       
-        
-    #     output = "Ok Let me Brain Storm some ideas .... "
- 
-        
- 
-    #     if product == '':
-    #         product ='gift'
-       
-    #     # print("perfect subcategory: " , sub)
- 
-    #     try:
-    #         title = conversation_title(memory_dict[session_id].buffer)
-    #         new = title.get('Title')
-    #     except Exception as e:
-    #         new = None
-    #     # print("title :",new)
-       
-    #     try:
-    #         amazon = get_products( product )
-    #     except Exception as e:
-    #         print("error from amazon",e)
- 
- 
-    #     json["Product"] = amazon
-    #     json["example"] = []
-    #     json["result"] = output
-    #     json["session_id"] = session_id
-    #     json["Title"] = new
-    #     json["feedback"] = feedback
-    #     # insert_global_token_stats(global_token_stats)
- 
-    # else:
- 
-    #     json["Product"] = {}
-    #     json["result"] = output
-    #     json["example"] = example_response
-    #     json["session_id"] = session_id
-    #     # json["Title"] = "None"
+    
  
     return json
  
@@ -683,18 +761,36 @@ def main_input(user_input, user_session_id):
     except Exception as e:
         output = {"error": "Something Went Wrong ...." , "code": "500"}
         return output
-   
     try:
-        parser1 = get_attributes( output)
+        recommendation_flag = question_or_recommendation(output)
+        flag = recommendation_flag.get("flag")
     except Exception as e:
-        parser1 = {"product": "" , "flag": "" , "features": {} , "feedback" : ""}
+        flag = "false"
+        
+    
+    
+    # if p.lower()=="true" or p == True:
+    #     print("-----in herer ---------")
+    #     print(products_and_features(output))
+    # print(p , type(p))
+    # print(output)
+    # print(recommendation_flag)
+    # try:
+    #     parser1 = get_attributes( output)
+    # except Exception as e:
+    #     parser1 = {"product": "" , "flag": "" , "features": {} , "feedback" : ""}
     
     
         
-    # print(output)
-    # print(parser1)
+    
+    
     # print(parser2)
  
-    final_output = output_filteration( output, parser1, user_session_id)
+    final_output = output_filteration( output, flag, user_session_id)
  
     return final_output
+
+# for i in range(5):
+#     inp = input()
+#     print(main_input(inp,"0"))
+
