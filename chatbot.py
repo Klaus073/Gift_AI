@@ -689,24 +689,44 @@ def output_filteration(output_old, flag  ,session_id):
             product ='gift' 
 
         try:
-            title = conversation_title(memory_dict[session_id].buffer)
-            new = title.get('Title')
-        except Exception as e:
-            new = None
-        # print("title :",new)
-       
-        try:
             amazon = get_products( product )
         except Exception as e:
             print("error from amazon",e)
+        
+        if len(amazon["search_result"]["items"]) == 0:
+            try:
+                parser2 = example_response(output_old)
+            except Exception as e:
+                print("here", str(e))
+                parser2 = {"example": ['']}
+
+            # get example responses from example responses function
+            example_answers = parser2.get('example', [])
+            if example_answers == ['']:
+                example_answers= []
+
+            json["Product"] = {}
+            json["result"] = output_old
+            json["example"] = example_answers
+            json["session_id"] = session_id
+        else:
+
+            try:
+                title = conversation_title(memory_dict[session_id].buffer)
+                new = title.get('Title')
+            except Exception as e:
+                new = None
+        # print("title :",new)
+       
+        
  
  
-        json["Product"] = amazon
-        json["example"] = []
-        json["result"] = output
-        json["session_id"] = session_id
-        json["Title"] = new
-        json["feedback"] = feedback   
+            json["Product"] = amazon
+            json["example"] = []
+            json["result"] = output
+            json["session_id"] = session_id
+            json["Title"] = new
+            json["feedback"] = feedback   
 
     else:
         # try:
