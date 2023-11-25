@@ -41,7 +41,7 @@ def filter_products(products):
 
     # Update the items with the filtered products
     products['search_result']['items'] = filtered_products
-    # print(skipped_count)
+    print(skipped_count)
     return products
 
 
@@ -185,7 +185,7 @@ def search_items(product):
         SearchItemsResource.ITEMINFO_TITLE,
         SearchItemsResource.OFFERS_LISTINGS_PRICE,
         SearchItemsResource.ITEMINFO_FEATURES,
-        SearchItemsResource.IMAGES_PRIMARY_LARGE,
+        
         
         SearchItemsResource.BROWSENODEINFO_BROWSENODES_SALESRANK
  
@@ -200,7 +200,7 @@ def search_items(product):
             keywords=keywords,
             search_index=search_index,
             item_count=item_count,
-            resources=search_items_resource
+            resources=search_items_resource,
         )
     except ValueError as exception:
         print("Error in forming SearchItemsRequest: ", exception)
@@ -210,7 +210,8 @@ def search_items(product):
  
         """ Sending request """
         # NOTE - Check if response exists in cache, return if it does otherwise send request to paapi
-        response = get_cached_response(search_items_request, default_api.search_items)
+        response = default_api.search_items(search_items_request)
+        # response = get_cached_response(search_items_request, default_api.search_items)
         # print(response)
        
         if response.errors is not None:
@@ -248,7 +249,9 @@ def simplify_json(json_obj):
             result[prefix] = obj
  
     flatten(json_obj)
-    return result
+    api_output=result[""]
+    api_output_dict= api_output.to_dict()
+    return api_output_dict
  
  
 def getitems(product   ):
@@ -264,7 +267,7 @@ def multiple_items(products):
     if isinstance(products, list):
         for i in products:
             try:
-                final_item = get_item_with_lowest_sales_rank(filter_products(search_items(i)))
+                final_item = get_item_with_lowest_sales_rank(filter_products(simplify_json(search_items(i))))
                 all_prod.append(final_item)
             except ValueError as ve:
                 # Handle the specific exception, if needed
@@ -286,5 +289,5 @@ def multiple_items(products):
 # print(multiple_items(default))
 # print(get_items(["0399590528"]))
 # LOOKING FOR BOOKS RECOMMENDATIONS , NEW TO BOOK READING , BUDGET $500 , ANY GENRE , OPEN TO RECOMMENDATIONS
-# defaul =  ['Jane Austen Quilt Kit', 'Jane Austen Silhouette Framed Art', 'Jane Austen Charm Bracelet', 'Jane Austen Themed Tea Set']
-# print(multiple_items(defaul))
+# defaul =  ['SteelSeries Arctis 7', 'HyperX Cloud II Wireless', 'Razer BlackShark V2 Pro', 'Logitech G Pro X Wireless']
+# print(search_items('Dual-Density Real Feel Dildo'))
