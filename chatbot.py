@@ -679,7 +679,7 @@ def output_filteration(output_old, flag  ,session_id):
             parser1 = {"product": [] , "features": {} , "feedback" : ""}
 
         product = parser1.get('product name')
-        print(parser1)
+        # print(parser1)
     
         feedback = parser1.get('feedback')    
 
@@ -753,8 +753,8 @@ def main_input(user_input, user_session_id):
     #     print("-----in herer ---------")
     #     print(products_and_features(output))
     # print(p , type(p))
-    print(output)
-    print(recommendation_flag)
+    # print(output)
+    # print(recommendation_flag)
     # try:
     #     parser1 = get_attributes( output)
     # except Exception as e:
