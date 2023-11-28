@@ -6,8 +6,9 @@ from paapi5_python_sdk.rest import ApiException
 from paapi5_python_sdk.models.get_items_resource import GetItemsResource
 from paapi5_python_sdk.models.get_items_request import GetItemsRequest
 from paapi5_python_sdk.models.condition import Condition
-
+import time
 import os
+import random
 import json
 from cache_service import get_cached_response
  
@@ -21,7 +22,7 @@ partner = os.environ.get('PARTNER_TAG')
 def filter_products(products):
     filtered_products = []
     skipped_count = 0
-
+    # print("here 0")
     for product in products['search_result']['items']:
         try:
             # Check if all the required keys have non-None values
@@ -34,8 +35,8 @@ def filter_products(products):
                 filtered_products.append(product)
             else:
                 skipped_count += 1
-        except (KeyError, TypeError):
-            # print("got here")
+        except (KeyError, TypeError) as e:
+            # print("got here",str(e))
             # Handle the case where the required keys are not present or have None values
             skipped_count += 1
 
@@ -104,6 +105,13 @@ def get_item_with_lowest_sales_rank(items):
                             'item': item,
                             'lowest_sales_rank': lowest_sales_rank
                         }
+        if lowest_sales_rank_item is None:
+            # print("noneeeeeeeeeee")
+            
+            lowest_sales_rank_item = {
+                            'item': random.choice(items),
+                            'lowest_sales_rank': lowest_sales_rank
+                        }
     except TypeError as e:
         print(f"been herer")
     # Return the item with the lowest sales rank
@@ -143,13 +151,7 @@ def get_lowest_sales_rank_asin(json_data):
  
  
 def search_items(product):
-    # print("1. ",keyword, "2. ",category,"3. ",budget_value)
-    # print("Product :", product)
-    # min = int(min)
-    # max = int(max)
-    # # print("maxprice", budget)
-    # print("min",min,type(min))
-    # print("max",max,type(max))
+    
  
     access_key = access
     secret_key = secret
@@ -163,21 +165,12 @@ def search_items(product):
         keywords = "gift items"
     keywords = product
  
-    """ Specify the category in which search request is to be made """
-    """ For more details, refer: https://webservices.amazon.com/paapi5/documentation/use-cases/organization-of-items-on-amazon/search-index.html """
-    # if category == "":
-    #     category = "All"
+    
     search_index ="All"
  
- 
- 
- 
-    """ Specify item count to be returned in search result """
     
     item_count = 10
  
-    """ Choose resources you want from SearchItemsResource enum """
-    """ For more details, refer: https://webservices.amazon.com/paapi5/documentation/search-items.html#resources-parameter """
     search_items_resource = [
         
         SearchItemsResource.IMAGES_PRIMARY_LARGE,
@@ -192,12 +185,13 @@ def search_items(product):
     ]
  
     """ Forming request """
+    
     try:
         search_items_request = SearchItemsRequest(
  
             partner_tag=partner_tag,
             partner_type=PartnerType.ASSOCIATES,
-            keywords=keywords,
+            title=keywords,
             search_index=search_index,
             item_count=item_count,
             resources=search_items_resource,
@@ -218,6 +212,28 @@ def search_items(product):
             print("\nPrinting Errors:\nPrinting First Error Object from list of Errors")
             print("Error code", response.errors[0].code)
             print("Error message", response.errors[0].message)
+            if  response.errors[0].code=="NoResults":
+                # print("here")
+                time.sleep(1)
+                try:
+                    search_items_request = SearchItemsRequest(
+            
+                        partner_tag=partner_tag,
+                        partner_type=PartnerType.ASSOCIATES,
+                        keywords=keywords,
+                        search_index=search_index,
+                        item_count=item_count,
+                        resources=search_items_resource,
+                    )
+                except ValueError as exception:
+                    print("Error in forming SearchItemsRequest: ", exception)
+                    return
+                try:
+                     response = default_api.search_items(search_items_request)
+                except ValueError as exception:
+                    print("Error in forming SearchItemsRequest: ", exception)
+                    return
+
  
     except ApiException as exception:
         print("Error calling PA-API 5.0!")
@@ -271,9 +287,11 @@ def multiple_items(products):
                 all_prod.append(final_item)
             except ValueError as ve:
                 # Handle the specific exception, if needed
+                print("value error")
                 pass
             except Exception as e:
                 # Handle the general exception, if needed
+                print("ee |",str(e))
                 pass
         
     products_json = {
@@ -282,6 +300,7 @@ def multiple_items(products):
             "total_result_count": len(all_prod)
         }
     }
+    # print(products_json["search_result"]["total_result_count"])
     
     return products_json
 
@@ -289,5 +308,5 @@ def multiple_items(products):
 # print(multiple_items(default))
 # print(get_items(["0399590528"]))
 # LOOKING FOR BOOKS RECOMMENDATIONS , NEW TO BOOK READING , BUDGET $500 , ANY GENRE , OPEN TO RECOMMENDATIONS
-# defaul =  ['SteelSeries Arctis 7', 'HyperX Cloud II Wireless', 'Razer BlackShark V2 Pro', 'Logitech G Pro X Wireless']
-# print(search_items('Dual-Density Real Feel Dildo'))
+# defaul =   ['Golf Rangefinder', 'Golf Chipping Net', 'F1 Team T-Shirt', 'F1 Driver Biography Book']
+# print(multiple_items(defaul))
