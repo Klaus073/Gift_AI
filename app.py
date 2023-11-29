@@ -1,12 +1,15 @@
 
 from flask import Flask, render_template, jsonify, request, session
 from flask_cors import CORS
-
-from chatbot import main_input
+import logging
+from chatbot import main_input , delete_memory_for_session
 import os
 
 app = Flask(__name__)
 CORS(app)
+
+# log_file_path = 'app_log.txt'
+# logging.basicConfig(filename=log_file_path, level=logging.DEBUG)
 
 # Route for the home page
 @app.route('/')
@@ -39,6 +42,17 @@ def api_main_input():
         # Handle exceptions related to request data and return an error response
         error_message = "An error occurred while processing the request data: " + str(e)
         return jsonify({"error": error_message, "code": 400}), 400
+    
+@app.route('/api/delete_memory_for_session', methods=['POST'])
+def delete_key_route():
+    data = request.get_json()
+    key_to_delete = data.get('session_id')
+
+    if key_to_delete is None:
+        return jsonify({'status': 'error', 'message': 'Key to delete not provided in the request.'})
+
+    result = delete_memory_for_session( key_to_delete)
+    return result 
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=4000, debug=True)

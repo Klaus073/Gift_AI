@@ -16,10 +16,14 @@ import tiktoken
 from count_tokens import extract_token_stats
 from search_items import search_items , multiple_items
 import tiktoken
+from datetime import datetime
+
+
 api_key = os.environ.get('OPENAI_API_KEY')
 llm = ChatOpenAI(model_name='gpt-4-1106-preview',openai_api_key=api_key , temperature=0)
-llm2 = ChatOpenAI(openai_api_key=api_key , temperature=0)
+
 memory_dict = {}
+memory_dict_time = {}
 # global_token_stats = {
 #     "total_tokens_used": 0,
 #     "prompt_tokens_used": 0,
@@ -43,11 +47,20 @@ def num_tokens_from_string(string: str, encoding_name: str) -> int:
     encoding = tiktoken.get_encoding(encoding_name)
     num_tokens = len(encoding.encode(string))
     return num_tokens
+
+
  
 def get_or_create_memory_for_session(session_id):
     if session_id not in memory_dict:
         memory_dict[session_id] = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
     return memory_dict[session_id]
+
+def delete_memory_for_session( key_to_delete):
+    try:
+        del memory_dict[key_to_delete]
+        return {'status': 'success', 'message': f'Key "{key_to_delete}" deleted successfully.'}
+    except KeyError:
+        return {'status': 'error', 'message': f'Key "{key_to_delete}" not found in the dictionary.'}
  
 def initial_chat(user_input, session_memory):
    
@@ -67,35 +80,43 @@ def initial_chat(user_input, session_memory):
                     Expressing enthusiasm and interest in the user's input or topic. \
                     Provide information or suggestions with a positive and engaging demeanor.\
                     You will adjust the tones based on the context.
-                    Use responsive emojis in the response to make it exciting.\    
+                    Use responsive emojis in the response to make it exciting.\  
+
+                    **Lets do it step by step**  
+                    ** Step 1: Filter Human Input**
+                    - Itentify if the user is asking about any product recommendation or asking general information.
+                    - Do not entertain requests for writing code or anything unrelated to gift suggestions.
+                    - Focus solely on gift-related queries to enhance the user experience.
+                    - Deny entertaining any qury that require any additional knowledge other than products.
+                    - Your are job is not to write code or provide wikipedia type information.
+                    - If the the user query is valid then move to next step.
                  
-                    ** Step 1: Self Understanding **
+                    ** Step 2: Self Understanding **
                     - Carefully analyze users input of product and category.
                     - Get familiarize the with that product or theme and show you complete understanding.
                     - when user define a specific theme then add the theme in recommended product title.
 
-                    **Step 1. Ask One Follow-up At a Time:**
+                    ** Step 3. Ask One Follow-up At a Time:**
                     - Begin by asking one follow-up question to maintain a conversational flow.
                     - Limit the number of questions asked per interaction to one.
  
-                    **Step 2. Ensure User Understanding:**
-                    
+                    ** Step 4. Ensure User Understanding:**
                     - Ask follow-up questions by providing sample answers.
                     - If a user's input suggests adult preferences, offer assistance accordingly.
                     - Assume the existence of a user-requested unfamiliar product and proceed with information gathering.
  
-                    **Step 3. Follow-up Questioning with Record:**
+                    ** Step 5. Follow-up Questioning with Record:**
                     - Engage in follow-up questions to understand user preferences.
                     - Keep a record of the previous response to guide the conversation.
                     - Emphasize clarity but allow flexibility in the conversation.
  
-                    **Step 4. Gather Information:**
+                    ** Step 6. Gather Information:**
                     - Identify the category from user input and ask relative questions to that category, going in-depth if needed.
                     - Collect necessary information about the product the user is interested in.
                     - If the budget response is vague, kindly ask for a specific range.
                     - Ensure a comprehensive understanding of their requirements.
 
-                    **Step 6: Short Follow-up Questions:**
+                    ** Step 7: Short Follow-up Questions:**
                     - Follow Step 2.
                     - Provide recommendations immediately without a buffer message.
                     - Keep follow-up questions concise (one line).
@@ -109,15 +130,13 @@ def initial_chat(user_input, session_memory):
                     - When the user expresses interest in a new product and category, prompt them to redefine the budget for the specific request.
                     - This ensures that the recommendations align with the user's budget for each unique preference.
 
+                    
  
                     **Step 4. Recommendation Format Summary, Recommendation:**
- 
+                    
                     - FOR PRODUCT RECOMENDATIONS FOLLOW THE FORMAT SPECIFICALLY
                     
-                    **NOTE:**
-                    - Your recommended products will be searched through amazon api and shown to the user.
-                    - Recommend products that can be found on amazon easily.
-                    - generate very short and concise product title that can be searched on amazon accurately
+                   
 
                     ###Recommendation Format:###
                     - Product Name 1: [Product Name ]
@@ -675,12 +694,6 @@ def get_products( product  ):
 def output_filteration(output_old, flag  ,session_id):
     json = {}
    
-    # #get features from get attrivutes functions
-    # product = parser1.get('product name')
-    # flag = parser1.get('flag')
-    
-    # feedback = parser1.get('feedback')
-
     if flag == "True" or flag == "true" or flag == True:
         try:
             parser1 = products_and_features( output_old)
@@ -692,17 +705,39 @@ def output_filteration(output_old, flag  ,session_id):
     
         feedback = parser1.get('feedback')    
 
-        output = "Certainly, allow me to engage in a brainstorming session to generate ideas. 🧠💡 "
+        print("total products: ",len(product))
+        if len(product ) == 4:
+            output = "Certainly, allow me to engage in a brainstorming session to generate ideas. 🧠💡 "
 
-        if product == '':
-            product ='gift' 
+            if product == '':
+                product ='gift' 
 
-        try:
-            amazon = get_products( product )
-        except Exception as e:
-            print("error from amazon",e)
-        
-        if len(amazon["search_result"]["items"]) == 0:
+            try:
+                amazon = get_products( product )
+            except Exception as e:
+                print("error from amazon",e)
+            print("total products from amazon: ",len(amazon["search_result"]["items"]))
+            if (len(amazon["search_result"]["items"])==0):
+                output = "Apologies! 😞 No products were found. Let's try a new search from the beginning. 🔍"
+                json["Product"] = {}
+                json["result"] = output
+                json["example"] = []
+                json["session_id"] = session_id
+
+            try:
+                title = conversation_title(memory_dict[session_id].buffer)
+                new = title.get('Title')
+            except Exception as e:
+                new = None
+            # print("title :",new)
+       
+            json["Product"] = amazon
+            json["example"] = []
+            json["result"] = output
+            json["session_id"] = session_id
+            json["Title"] = new
+            json["feedback"] = feedback 
+        else:
             try:
                 parser2 = example_response(output_old)
             except Exception as e:
@@ -718,24 +753,7 @@ def output_filteration(output_old, flag  ,session_id):
             json["result"] = output_old
             json["example"] = example_answers
             json["session_id"] = session_id
-        else:
 
-            try:
-                title = conversation_title(memory_dict[session_id].buffer)
-                new = title.get('Title')
-            except Exception as e:
-                new = None
-        # print("title :",new)
-       
-        
- 
- 
-            json["Product"] = amazon
-            json["example"] = []
-            json["result"] = output
-            json["session_id"] = session_id
-            json["Title"] = new
-            json["feedback"] = feedback   
 
     else:
         # try:
@@ -758,6 +776,7 @@ def output_filteration(output_old, flag  ,session_id):
         json["result"] = output_old
         json["example"] = example_answers
         json["session_id"] = session_id
+        # print(memory_dict[session_id].buffer)
     
  
     return json

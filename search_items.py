@@ -308,5 +308,5 @@ def multiple_items(products):
 # print(multiple_items(default))
 # print(get_items(["0399590528"]))
 # LOOKING FOR BOOKS RECOMMENDATIONS , NEW TO BOOK READING , BUDGET $500 , ANY GENRE , OPEN TO RECOMMENDATIONS
-# defaul =   ['Golf Rangefinder', 'Golf Chipping Net', 'F1 Team T-Shirt', 'F1 Driver Biography Book']
+# defaul =   ['Custom Calligraphy Family Crest', 'Bespoke Calligraphy Wedding Vows', 'Handmade Calligraphy Wall Scroll', 'Original Calligraphy on Canvas']
 # print(multiple_items(defaul))
