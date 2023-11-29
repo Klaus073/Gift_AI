@@ -705,7 +705,7 @@ def output_filteration(output_old, flag  ,session_id):
     
         feedback = parser1.get('feedback')    
 
-        print("total products: ",len(product))
+        # print("total products: ",len(product))
         if len(product ) == 4:
             output = "Certainly, allow me to engage in a brainstorming session to generate ideas. 🧠💡 "
 
@@ -716,7 +716,7 @@ def output_filteration(output_old, flag  ,session_id):
                 amazon = get_products( product )
             except Exception as e:
                 print("error from amazon",e)
-            print("total products from amazon: ",len(amazon["search_result"]["items"]))
+            # print("total products from amazon: ",len(amazon["search_result"]["items"]))
             if (len(amazon["search_result"]["items"])==0):
                 output = "Apologies! 😞 No products were found. Let's try a new search from the beginning. 🔍"
                 json["Product"] = {}
