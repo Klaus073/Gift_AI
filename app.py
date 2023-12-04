@@ -3,11 +3,13 @@ from flask import Flask, render_template, jsonify, request, session
 from flask_cors import CORS
 import logging
 from chatbot import main_input , delete_memory_for_session
+from datetime import datetime, timedelta
+from apscheduler.schedulers.background import BackgroundScheduler
 import os
 
 app = Flask(__name__)
 CORS(app)
-
+key_times = {}
 # log_file_path = 'app_log.txt'
 # logging.basicConfig(filename=log_file_path, level=logging.DEBUG)
 
@@ -15,6 +17,26 @@ CORS(app)
 @app.route('/')
 def get_status():
     return jsonify(message="Running")
+
+def assign_time_to_key(key):
+    if key not in key_times:
+        key_times[key] = datetime.now()
+        print(f"Key '{key}' assigned time: {key_times[key]}")
+
+def check_keys():
+    global key_times
+    # print("cron jab was here",datetime.now() )
+    current_time = datetime.now()
+    
+    try:
+        for key, assigned_time in list(key_times.items()):
+            if current_time - assigned_time > timedelta(days=1):
+                print("time over for key:", key)
+                delete_memory_for_session(key)
+                del key_times[key]
+    except Exception as e:
+        print(f"Error in check_keys: {e}")
+
 
 @app.route('/api/main_input', methods=['POST'])
 def api_main_input():
@@ -28,6 +50,7 @@ def api_main_input():
 
         user_input = data['user_input']
         session_id = data['session_id']
+        assign_time_to_key(session_id)
 
         try:
             output = main_input(user_input, session_id)
@@ -55,4 +78,7 @@ def delete_key_route():
     return result 
 
 if __name__ == "__main__":
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=check_keys, trigger='interval', days=1)
+    scheduler.start()
     app.run(host='0.0.0.0', port=4000, debug=True)
