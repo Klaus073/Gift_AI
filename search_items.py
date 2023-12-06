@@ -39,13 +39,13 @@ def filter_products(products):
                 skipped_count += 1
         except (KeyError, TypeError) as e:
             
-            print("got here")
+            # print("got here")
             # Handle the case where the required keys are not present or have None values
             skipped_count += 1
 
     # Update the items with the filtered products
     products['search_result']['items'] = filtered_products
-    print(skipped_count)
+    # print(skipped_count)
     return products
 
 
