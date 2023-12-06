@@ -2,5 +2,6 @@ myenv/
 flask_session/
 .env
 session_utils.py
+skipped_info.json
 __pycache__/
 venv/
