@@ -28,15 +28,18 @@ def filter_products(products):
             # Check if all the required keys have non-None values
             if (
                 product['images']['primary']['large']
-                and product['item_info']['features']
+                
                 and product['offers']['listings'][0]['price']['display_amount']
                 and product['item_info']['title']['display_value']
             ):
+                # print("not--missing",product.get('asin'))
                 filtered_products.append(product)
             else:
+                print("missing",product.get('asin'))
                 skipped_count += 1
         except (KeyError, TypeError) as e:
-            # print("got here",str(e))
+            
+            # print("got here")
             # Handle the case where the required keys are not present or have None values
             skipped_count += 1
 
