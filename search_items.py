@@ -45,7 +45,7 @@ def filter_products(products):
 
     # Update the items with the filtered products
     products['search_result']['items'] = filtered_products
-    print(skipped_count)
+    # print(skipped_count)
     return products
 
 

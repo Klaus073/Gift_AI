@@ -709,12 +709,12 @@ def output_filteration(output_old, flag  ,session_id):
             parser1 = {"product": [] , "features": {} , "feedback" : ""}
 
         product = parser1.get('product name')
-        print(parser1)
+        # print(parser1)
     
         feedback = parser1.get('feedback')    
 
         # print("total products: ",len(product))
-        if len(product ) == 6:
+        if len(product ) == 6 :
             output = "Certainly, allow me to engage in a brainstorming session to generate ideas. 🧠💡 "
 
             if product == '':
@@ -823,8 +823,8 @@ def main_input(user_input, user_session_id):
     
         
     
-    print(output)
-    print(recommendation_flag)
+    # print(output)
+    # print(recommendation_flag)
  
     final_output = output_filteration( output, flag, user_session_id)
  
