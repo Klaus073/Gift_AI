@@ -84,21 +84,22 @@ def initial_chat(user_input, session_memory):
 
                     **Lets do it step by step**  
                     ** Step 1: Filter Human Input**
-                    - Identify queries related to gifts.
-                    - Disregard non-product requests.
-                    - Exclude coding or unrelated topics.
-                    - Proceed only with valid queries.
-
+                    - Itentify if the user is asking about any product recommendation or asking general information.
+                    - Do not entertain requests for writing code or anything unrelated to gift suggestions.
+                    - Focus solely on gift-related queries to enhance the user experience.
+                    - Deny entertaining any qury that require any additional knowledge other than products.
+                    - Your are job is not to write code or provide wikipedia type information.
+                    - If the the user query is valid then move to next step.
+                 
                     ** Step 2: Self Understanding **
-                    - Thoroughly analyze the mentioned product or category.
-                    - Demonstrate a clear understanding of the theme.
-                    - Incorporate the identified theme into the recommended product title.
-
+                    - Carefully analyze users input of product and category.
+                    - Get familiarize the with that product or theme and show you complete understanding.
+                    - when user define a specific theme then add the theme in recommended product title.
 
                     ** Step 3. Ask One Follow-up At a Time:**
                     - Begin by asking one follow-up question to maintain a conversational flow.
                     - Limit the number of questions asked per interaction to one.
-                    - Your response cannot exceed one lines.
+                    - Your response cannot exceed 1 line.
  
                     ** Step 4. Ensure User Understanding:**
                     - Ask follow-up questions by providing sample answers.
@@ -111,15 +112,15 @@ def initial_chat(user_input, session_memory):
                     - Emphasize clarity but allow flexibility in the conversation.
  
                     ** Step 6. Gather Information:**
-                   - Identify the specific category from the user's input.
-                   - Ask relevant questions related to the chosen category, delving deeper if necessary.
-                   - Seek detailed information about the product of interest.
-                   - If the budget response is vague, kindly request a specific range.
+                    - Identify the category from user input and ask relative questions to that category, going in-depth if needed.
+                    - Collect necessary information about the product the user is interested in.
+                    - If the budget response is vague, kindly ask for a specific range.
+                    - Ensure a comprehensive understanding of their requirements.
 
                     ** Step 7: Short Follow-up Questions:**
-                    - Apply the insights gained from Step 2.
-                    - Offer immediate recommendations without a buffer message.
-                    - Keep follow-up questions concise, typically one line.
+                    - Follow Step 2.
+                    - Provide recommendations immediately without a buffer message.
+                    - Keep follow-up questions to 1 line max.
 
                     **Note for Handling Budget Exceedance:**
                     - If the user's request suggests a product or category beyond the defined budget, inform the user politely.
@@ -130,13 +131,14 @@ def initial_chat(user_input, session_memory):
                     - When the user expresses interest in a new product and category, prompt them to redefine the budget for the specific request.
                     - This ensures that the recommendations align with the user's budget for each unique preference.
 
-                    
- 
                     **Step 4. Recommendation Format Summary, Recommendation:**
-                    - Use your Knowledge of Amazon Products for Recommending Product Titles.
-                    - Create a recommendation title specifically tailored for Amazon, incorporating the identified theme.
+                    - Recommend only amazon products.
+                    - Keep the recommendations with the aspect of budget.
+                    - If budget is high then recommend expensive products and if budget is low then recommend accordingly.
                     - FOR PRODUCT RECOMENDATIONS FOLLOW THE FORMAT SPECIFICALLY
                     
+                   
+
                     ###Recommendation Format:###
                     - Product Name 1: [Product Name ]
                     - Budget Provided: [Budget Provided]
@@ -156,13 +158,13 @@ def initial_chat(user_input, session_memory):
                     - Product Name 6: [Product Name ]
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
-                    
 
                     **Step 5. Present and Refine Products Based on Feedback:**
                         
                     - Present six product recommendations based on gathered information.
                     - Ask for user feedback on the recommendations.
                     - If the user expresses interest in seeing more options, provide another set of six recommendations.
+                    - if the user changes his interests then must re-assure the budget.
                     - Continuously refine product suggestions based on feedback.
                     - Repeat the process, presenting refined recommendations six at a time and seeking feedback until the user indicates satisfaction or makes specific changes to preferences.
                     - Maintain a positive and engaging tone throughout the interaction.
@@ -282,17 +284,11 @@ def products_and_features(ai_products):
                 - Carefully analyze the products given.
                 Step 2:
                 - Extract the recommended product item names
+            
                 Step 3:
-                - Extract the budget.
-                - if the budget is a vague value then convert into numerical value accordingly
-                Step 4:
-                - Breakdown the budget into min and max key value pairs.
-                - set the min ans max value based on the range.
-                - If signle amount is given set the min to 1 and max to the amount given.
-                - Store the amount withut dollar sign.
                 - Extract the feedback mentioned in the response
                 Step 4:
-                Return all the product item in a list named as 'product name' , provided budget , min amount , max amount in a dictionary named as 'budget' and feedback as sentence in variable named as 'feedback'.
+                Return all the product items in a list named as 'product name' and feedback as sentence in variable named as 'feedback'.
                
                  \n{format_instructions}\n{ai_products}
  
@@ -465,6 +461,7 @@ Question: {ai_response}
 - Ensure the responses are literal and directly address the question.
 - Avoid forming questions in the responses.
 - Maintain alignment between all 8 responses.
+- Do not give vague responses for budget question.
 
 **Step 3. Verify Context Alignment:**
 - After generating responses, cross-verify them with existing knowledge.
@@ -751,12 +748,14 @@ def output_filteration(output_old, flag  ,session_id):
 
             # get example responses from example responses function
             example_answers = parser2.get('example', [])
+            example_answers_unique = set(example_answers)
+            unique_example_answers = list(example_answers_unique)
             if example_answers == ['']:
                 example_answers= []
 
             json["Product"] = {}
             json["result"] = output_old
-            json["example"] = example_answers
+            json["example"] = unique_example_answers
             json["session_id"] = session_id
 
 
@@ -774,12 +773,14 @@ def output_filteration(output_old, flag  ,session_id):
 
         # get example responses from example responses function
         example_answers = parser2.get('example', [])
+        example_answers_unique = set(example_answers)
+        unique_example_answers = list(example_answers_unique)
         if example_answers == ['']:
             example_answers= []
 
         json["Product"] = {}
         json["result"] = output_old
-        json["example"] = example_answers
+        json["example"] = unique_example_answers
         json["session_id"] = session_id
         # print(memory_dict[session_id].buffer)
     

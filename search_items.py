@@ -32,14 +32,14 @@ def filter_products(products):
                 and product['offers']['listings'][0]['price']['display_amount']
                 and product['item_info']['title']['display_value']
             ):
-                # print("not--missing",product.get('asin'))
+                
                 filtered_products.append(product)
             else:
-                print("missing",product.get('asin'))
+                # print("missing",product.get('asin'))
                 skipped_count += 1
         except (KeyError, TypeError) as e:
             
-            # print("got here")
+            # print("got here",str(e))
             # Handle the case where the required keys are not present or have None values
             skipped_count += 1
 
@@ -296,15 +296,22 @@ def multiple_items(products):
                 # Handle the general exception, if needed
                 print("ee |",str(e))
                 pass
-        
+
+    # Replicate products randomly and shuffle if the length is not 6
+    while len(all_prod) < 6:
+        random_product = random.choice(all_prod)
+        all_prod.append(random_product)
+
+    # Shuffle the list
+    random.shuffle(all_prod)
+
     products_json = {
         "search_result": {
             "items": all_prod,
             "total_result_count": len(all_prod)
         }
     }
-    # print(products_json["search_result"]["total_result_count"])
-    
+
     return products_json
 
     
