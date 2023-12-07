@@ -6,6 +6,7 @@ from langchain.prompts import (
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
+import re
 from langchain.callbacks import get_openai_callback
 from token_stats_db import insert_global_token_stats
 from langchain.chains import LLMChain
@@ -703,15 +704,16 @@ def output_filteration(output_old, flag  ,session_id):
     json = {}
    
     if flag == "True" or flag == "true" or flag == True:
-        try:
-            parser1 = products_and_features( output_old)
-        except Exception as e:
-            parser1 = {"product": [] , "features": {} , "feedback" : ""}
+        # try:
+        #     parser1 = products_and_features( output_old)
+        # except Exception as e:
+        #     parser1 = {"product": [] , "features": {} , "feedback" : ""}
 
-        product = parser1.get('product name')
-        # print(parser1)
+        # product = parser1.get('product name')
+        # # print(parser1)
     
-        feedback = parser1.get('feedback')    
+        feedback = output_old.strip().split('\n')[-1]    
+        product = re.findall(r'Product Name \d+: (.+?)(?:\n|$)', output_old)
 
         # print("total products: ",len(product))
         if len(product ) == 6 :
@@ -801,11 +803,19 @@ def main_input(user_input, user_session_id):
     except Exception as e:
         output = {"error": "Something Went Wrong ...." , "code": "500"}
         return output
-    try:
-        recommendation_flag = question_or_recommendation(output)
-        flag = recommendation_flag.get("flag")
-    except Exception as e:
-        flag = "false"
+    
+    if output.count("Product Name") >=3 and output.count("Budget Provided")>=3:
+        gflag = "True"
+        print("main flag",gflag)
+    else:
+        gflag = "False"
+        print("main flag",gflag)
+
+    # try:
+    #     recommendation_flag = question_or_recommendation(output)
+    #     flag = recommendation_flag.get("flag")
+    # except Exception as e:
+    #     flag = "false"
         
     
     
@@ -823,10 +833,10 @@ def main_input(user_input, user_session_id):
     
         
     
-    # print(output)
+    print(output)
     # print(recommendation_flag)
  
-    final_output = output_filteration( output, flag, user_session_id)
+    final_output = output_filteration( output, gflag, user_session_id)
  
     return final_output
 
