@@ -714,6 +714,7 @@ def output_filteration(output_old, flag  ,session_id):
     
         feedback = output_old.strip().split('\n')[-1]    
         product = re.findall(r'Product Name \d+: (.+?)(?:\n|$)', output_old)
+        # print(product)
 
         # print("total products: ",len(product))
         if len(product ) == 6 :
@@ -781,8 +782,10 @@ def output_filteration(output_old, flag  ,session_id):
 
         # get example responses from example responses function
         example_answers = parser2.get('example', [])
+
         example_answers_unique = set(example_answers)
         unique_example_answers = list(example_answers_unique)
+        # print(unique_example_answers)
         if example_answers == ['']:
             example_answers= []
 
@@ -809,7 +812,7 @@ def main_input(user_input, user_session_id):
         print("main flag",gflag)
     else:
         gflag = "False"
-        print("main flag",gflag)
+        # print("main flag",gflag)
 
     # try:
     #     recommendation_flag = question_or_recommendation(output)
@@ -833,7 +836,7 @@ def main_input(user_input, user_session_id):
     
         
     
-    print(output)
+    # print(output)
     # print(recommendation_flag)
  
     final_output = output_filteration( output, gflag, user_session_id)

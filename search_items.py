@@ -10,6 +10,7 @@ import time
 import os
 import random
 import json
+import concurrent.futures
 from cache_service import get_cached_response
  
 access = os.environ.get('ACCESS_KEY')
@@ -280,22 +281,54 @@ def getitems(product   ):
  
 
 
+def process_product(product):
+    max_retries = 3
+    retry_delay = 2  # seconds
+    retries = 0
+
+    while retries < max_retries:
+        try:
+            # Introduce a delay to avoid rate limiting
+            time.sleep(2)  # Adjust the sleep duration as needed
+            final_item = get_item_with_lowest_sales_rank(filter_products(simplify_json(search_items(product))))
+            return final_item
+        except ValueError as ve:
+            # Handle the specific exception, if needed
+            print("value error")
+            pass
+        except Exception as e:
+            # Check if the exception corresponds to a 429 status code
+            if '429' in str(e):
+                print("Rate limit exceeded. Retrying after delay.")
+                time.sleep(retry_delay)
+                retries += 1
+            else:
+                # Handle other exceptions
+                print("ee |", str(e))
+                pass
+
+    print(f"Exceeded maximum retries for product: {product}")
+    return None  # Or raise an exception as needed
+
+# Your existing code...
+
 def multiple_items(products):
     all_prod = []
-    
-    if isinstance(products, list):
-        for i in products:
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(process_product, product) for product in products]
+
+        for future in concurrent.futures.as_completed(futures):
             try:
-                final_item = get_item_with_lowest_sales_rank(filter_products(simplify_json(search_items(i))))
-                all_prod.append(final_item)
-            except ValueError as ve:
-                # Handle the specific exception, if needed
-                print("value error")
-                pass
+                result = future.result()
+                if result:
+                    all_prod.append(result)
             except Exception as e:
-                # Handle the general exception, if needed
-                print("ee |",str(e))
-                pass
+                # Handle exceptions that may occur during processing
+                print("Error:", str(e))
+    
+    if len(all_prod) < 6:
+        print("lower than 6: ", len(all_prod))
 
     # Replicate products randomly and shuffle if the length is not 6
     while len(all_prod) < 6:
@@ -314,6 +347,17 @@ def multiple_items(products):
 
     return products_json
 
+
+
+# def measure_time(func, *args, **kwargs):
+#     start_time = time.time()
+#     result = func(*args, **kwargs)
+#     end_time = time.time()
+#     elapsed_time = end_time - start_time
+#     return result, elapsed_time
+# products = ['Deus Ex: Mankind Divided', 'Alien: Isolation', 'Nier: Automata', 'Elite Dangerous', 'Titanfall 2', 'XCOM 2']
+# result, time_taken = measure_time(multiple_items, products)
+# print(f"Function took {time_taken} seconds")
     
 # print(multiple_items(default))
 # print(get_items(["0399590528"]))
