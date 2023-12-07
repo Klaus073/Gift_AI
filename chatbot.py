@@ -274,7 +274,7 @@ def products_and_features(ai_products):
         messages=[
             HumanMessagePromptTemplate.from_template(
                 """
-                **Role:**
+                 **Role:**
                     Imagine you're a products and its feature analyzer tasked to extract the recommended products in the response.
 
                 Response = {ai_products}
@@ -284,11 +284,17 @@ def products_and_features(ai_products):
                 - Carefully analyze the products given.
                 Step 2:
                 - Extract the recommended product item names
-            
                 Step 3:
+                - Extract the budget.
+                - if the budget is a vague value then convert into numerical value accordingly
+                Step 4:
+                - Breakdown the budget into min and max key value pairs.
+                - set the min ans max value based on the range.
+                - If signle amount is given set the min to 1 and max to the amount given.
+                - Store the amount withut dollar sign.
                 - Extract the feedback mentioned in the response
                 Step 4:
-                Return all the product items in a list named as 'product name' and feedback as sentence in variable named as 'feedback'.
+                Return all the product item in a list named as 'product name' , provided budget , min amount , max amount in a dictionary named as 'budget' and feedback as sentence in variable named as 'feedback'.
                
                  \n{format_instructions}\n{ai_products}
  
@@ -703,7 +709,7 @@ def output_filteration(output_old, flag  ,session_id):
             parser1 = {"product": [] , "features": {} , "feedback" : ""}
 
         product = parser1.get('product name')
-        # print(parser1)
+        print(parser1)
     
         feedback = parser1.get('feedback')    
 
@@ -817,8 +823,8 @@ def main_input(user_input, user_session_id):
     
         
     
-    # print(output)
-    # print(recommendation_flag)
+    print(output)
+    print(recommendation_flag)
  
     final_output = output_filteration( output, flag, user_session_id)
  
