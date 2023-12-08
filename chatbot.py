@@ -18,7 +18,7 @@ from count_tokens import extract_token_stats
 from search_items import search_items , multiple_items
 import tiktoken
 from datetime import datetime
-
+from concurrent.futures import ProcessPoolExecutor
 
 api_key = os.environ.get('OPENAI_API_KEY')
 llm = ChatOpenAI(model_name='gpt-4-1106-preview',openai_api_key=api_key , temperature=0)
@@ -697,7 +697,19 @@ def get_products( product  ):
     result = multiple_items(product )
     return result
    
- 
+def get_amazon_products(product):
+    try:
+        return get_products(product)
+    except Exception as e:
+        print("error from amazon", e)
+        return {"search_result": {"items": []}}
+
+def get_title(memory_dict, session_id):
+    try:
+        title = conversation_title(memory_dict[session_id].buffer)
+        return title.get('Title')
+    except Exception as e:
+        return None
  
  
 def output_filteration(output_old, flag  ,session_id):
@@ -717,36 +729,34 @@ def output_filteration(output_old, flag  ,session_id):
         # print(product)
 
         # print("total products: ",len(product))
-        if len(product ) == 6 :
+        if len(product) == 6:
             output = "Certainly, allow me to engage in a brainstorming session to generate ideas. 🧠💡 "
 
             if product == '':
-                product ='gift' 
+                product = 'gift'
 
-            try:
-                amazon = get_products( product )
-            except Exception as e:
-                print("error from amazon",e)
-            # print("total products from amazon: ",len(amazon["search_result"]["items"]))
-            if (len(amazon["search_result"]["items"])==0):
+            with ProcessPoolExecutor() as executor:
+                # Run the functions in parallel
+                future_amazon = executor.submit(get_amazon_products, product)
+                future_title = executor.submit(get_title, memory_dict, session_id)
+
+                # Wait for both tasks to complete
+                amazon = future_amazon.result()
+                title = future_title.result()
+
+            if len(amazon["search_result"]["items"]) == 0:
                 output = "Apologies! 😞 No products were found. Let's try a new search from the beginning. 🔍"
                 json["Product"] = {}
                 json["result"] = output
                 json["example"] = []
                 json["session_id"] = session_id
+            else:
+                json["Product"] = amazon
+                json["example"] = []
+                json["result"] = output
+                json["session_id"] = session_id
 
-            try:
-                title = conversation_title(memory_dict[session_id].buffer)
-                new = title.get('Title')
-            except Exception as e:
-                new = None
-            # print("title :",new)
-       
-            json["Product"] = amazon
-            json["example"] = []
-            json["result"] = output
-            json["session_id"] = session_id
-            json["Title"] = new
+            json["Title"] = title
             json["feedback"] = feedback 
         else:
             try:
