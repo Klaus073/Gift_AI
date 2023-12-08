@@ -6,6 +6,7 @@ from langchain.prompts import (
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
+import re
 from langchain.callbacks import get_openai_callback
 from token_stats_db import insert_global_token_stats
 from langchain.chains import LLMChain
@@ -17,7 +18,7 @@ from count_tokens import extract_token_stats
 from search_items import search_items , multiple_items
 import tiktoken
 from datetime import datetime
-
+from concurrent.futures import ProcessPoolExecutor
 
 api_key = os.environ.get('OPENAI_API_KEY')
 llm = ChatOpenAI(model_name='gpt-4-1106-preview',openai_api_key=api_key , temperature=0)
@@ -274,7 +275,7 @@ def products_and_features(ai_products):
         messages=[
             HumanMessagePromptTemplate.from_template(
                 """
-                **Role:**
+                 **Role:**
                     Imagine you're a products and its feature analyzer tasked to extract the recommended products in the response.
 
                 Response = {ai_products}
@@ -284,11 +285,17 @@ def products_and_features(ai_products):
                 - Carefully analyze the products given.
                 Step 2:
                 - Extract the recommended product item names
-            
                 Step 3:
+                - Extract the budget.
+                - if the budget is a vague value then convert into numerical value accordingly
+                Step 4:
+                - Breakdown the budget into min and max key value pairs.
+                - set the min ans max value based on the range.
+                - If signle amount is given set the min to 1 and max to the amount given.
+                - Store the amount withut dollar sign.
                 - Extract the feedback mentioned in the response
                 Step 4:
-                Return all the product items in a list named as 'product name' and feedback as sentence in variable named as 'feedback'.
+                Return all the product item in a list named as 'product name' , provided budget , min amount , max amount in a dictionary named as 'budget' and feedback as sentence in variable named as 'feedback'.
                
                  \n{format_instructions}\n{ai_products}
  
@@ -690,54 +697,66 @@ def get_products( product  ):
     result = multiple_items(product )
     return result
    
- 
+def get_amazon_products(product):
+    try:
+        return get_products(product)
+    except Exception as e:
+        print("error from amazon", e)
+        return {"search_result": {"items": []}}
+
+def get_title(memory_dict, session_id):
+    try:
+        title = conversation_title(memory_dict[session_id].buffer)
+        return title.get('Title')
+    except Exception as e:
+        return None
  
  
 def output_filteration(output_old, flag  ,session_id):
     json = {}
    
     if flag == "True" or flag == "true" or flag == True:
-        try:
-            parser1 = products_and_features( output_old)
-        except Exception as e:
-            parser1 = {"product": [] , "features": {} , "feedback" : ""}
+        # try:
+        #     parser1 = products_and_features( output_old)
+        # except Exception as e:
+        #     parser1 = {"product": [] , "features": {} , "feedback" : ""}
 
-        product = parser1.get('product name')
-        # print(parser1)
+        # product = parser1.get('product name')
+        # # print(parser1)
     
-        feedback = parser1.get('feedback')    
+        feedback = output_old.strip().split('\n')[-1]    
+        product = re.findall(r'Product Name \d+: (.+?)(?:\n|$)', output_old)
+        # print(product)
 
         # print("total products: ",len(product))
-        if len(product ) == 6:
+        if len(product) == 6:
             output = "Certainly, allow me to engage in a brainstorming session to generate ideas. 🧠💡 "
 
             if product == '':
-                product ='gift' 
+                product = 'gift'
 
-            try:
-                amazon = get_products( product )
-            except Exception as e:
-                print("error from amazon",e)
-            # print("total products from amazon: ",len(amazon["search_result"]["items"]))
-            if (len(amazon["search_result"]["items"])==0):
+            with ProcessPoolExecutor() as executor:
+                # Run the functions in parallel
+                future_amazon = executor.submit(get_amazon_products, product)
+                future_title = executor.submit(get_title, memory_dict, session_id)
+
+                # Wait for both tasks to complete
+                amazon = future_amazon.result()
+                title = future_title.result()
+
+            if len(amazon["search_result"]["items"]) == 0:
                 output = "Apologies! 😞 No products were found. Let's try a new search from the beginning. 🔍"
                 json["Product"] = {}
                 json["result"] = output
                 json["example"] = []
                 json["session_id"] = session_id
+            else:
+                json["Product"] = amazon
+                json["example"] = []
+                json["result"] = output
+                json["session_id"] = session_id
 
-            try:
-                title = conversation_title(memory_dict[session_id].buffer)
-                new = title.get('Title')
-            except Exception as e:
-                new = None
-            # print("title :",new)
-       
-            json["Product"] = amazon
-            json["example"] = []
-            json["result"] = output
-            json["session_id"] = session_id
-            json["Title"] = new
+            json["Title"] = title
             json["feedback"] = feedback 
         else:
             try:
@@ -773,8 +792,10 @@ def output_filteration(output_old, flag  ,session_id):
 
         # get example responses from example responses function
         example_answers = parser2.get('example', [])
+
         example_answers_unique = set(example_answers)
         unique_example_answers = list(example_answers_unique)
+        # print(unique_example_answers)
         if example_answers == ['']:
             example_answers= []
 
@@ -795,11 +816,19 @@ def main_input(user_input, user_session_id):
     except Exception as e:
         output = {"error": "Something Went Wrong ...." , "code": "500"}
         return output
-    try:
-        recommendation_flag = question_or_recommendation(output)
-        flag = recommendation_flag.get("flag")
-    except Exception as e:
-        flag = "false"
+    
+    if output.count("Product Name") >=3 and output.count("Budget Provided")>=3:
+        gflag = "True"
+        print("main flag",gflag)
+    else:
+        gflag = "False"
+        # print("main flag",gflag)
+
+    # try:
+    #     recommendation_flag = question_or_recommendation(output)
+    #     flag = recommendation_flag.get("flag")
+    # except Exception as e:
+    #     flag = "false"
         
     
     
@@ -820,7 +849,7 @@ def main_input(user_input, user_session_id):
     # print(output)
     # print(recommendation_flag)
  
-    final_output = output_filteration( output, flag, user_session_id)
+    final_output = output_filteration( output, gflag, user_session_id)
  
     return final_output
 
