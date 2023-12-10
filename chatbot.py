@@ -145,21 +145,27 @@ def initial_chat(user_input, session_memory):
                     - Product Name 1: [Product Name ]
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
+                    - Product Category: [Amazon Search Index for Product 1]
                     - Product Name 2: [Product Name ]
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
+                    - Product Category: [Amazon Search Index for Product 2]
                     - Product Name 3: [Product Name ]
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
+                    - Product Category: [Amazon Search Index for Product 3]
                     - Product Name 4: [Product Name ]
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
+                    - Product Category: [Amazon Search Index for Product 4]
                     - Product Name 5: [Product Name ]
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
+                    - Product Category: [Amazon Search Index for Product 5]
                     - Product Name 6: [Product Name ]
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
+                    - Product Category: [Amazon Search Index for Product 6]
 
                     **Step 5. Present and Refine Products Based on Feedback:**
 
@@ -637,11 +643,11 @@ def conversation_title( conversation):
  
 # sub_categories =['Kindle Kids', 'Kindle Paperwhite', 'Kindle Oasis', 'Kindle Books', 'Camera & Photo', 'Headphones', 'Video Game Consoles & Accessories', 'Wearable Technology', 'Cell Phones & Accessories', 'Computer Accessories & Peripherals', 'Monitors', 'Laptop Accessories', 'Data Storage', 'Amazon Smart Home', 'Smart Home Lighting', 'Smart Locks and Entry', 'Security Cameras and Systems', 'Painting, Drawing & Art Supplies', 'Beading & Jewelry Making', 'Crafting', 'Sewing', 'Car Care', 'Car Electronics & Accessories', 'Exterior Accessories', 'Interior Accessories', 'Motorcycle & Powersports', 'Activity & Entertainment', 'Apparel & Accessories', 'Baby & Toddler Toys', 'Nursery', 'Travel Gear', 'Makeup', 'Skin Care', 'Hair Care', 'Fragrance', 'Foot, Hand & Nail Care', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Handbags', 'Clothing', 'Shoes', 'Watches', 'Accessories', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Handbags', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Health Care', 'Household Supplies', 'Vitamins & Dietary Supplements', 'Wellness & Relaxation', 'Kitchen & Dining', 'Bedding', 'Bath', 'Furniture', 'Home Décor', 'Wall Art', 'Carry-ons', 'Backpacks', 'Garment bags', 'Travel Totes', 'Dogs', 'Cats', 'Fish & Aquatic Pets', 'Birds', 'Sports and Outdoors', 'Outdoor Recreation', 'Sports & Fitness', 'Tools & Home Improvement', 'Appliances', 'Building Supplies', 'Electrical', 'Action Figures & Statues', 'Arts & Crafts', 'Baby & Toddler Toys', 'Building Toys', 'Video Games', 'PlayStation', 'Xbox', 'Nintendo', 'PC', 'All gift cards', 'eGift cards', 'Gift cards by mail', 'Specialty gift cards']
  
-def product_response( product):
+def product_response( product , category):
     global COUNTER  # Add this line if you want to modify the global variable
     COUNTER = COUNTER + 1
     response_schemas = [
-        ResponseSchema(name="Category", description="a key value of most relevant category and sub category")]
+        ResponseSchema(name="Categories", description="a key value of most relevant category and sub category")]
  
     output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
     format_instructions = output_parser.get_format_instructions()
@@ -651,20 +657,22 @@ def product_response( product):
             HumanMessagePromptTemplate.from_template(
                """
                 *Role:*
-                - Picture yourself as an AI guide, assisting users in finding the perfect category and subcategory for three products.
-                - Your mission is to thoughtfully analyze the products and align them with the provided categories and subcategories.
+                - Picture yourself as an AI guide, assisting users in finding the perfect category of products.
+                - Your mission is to thoughtfully analyze the products and align them with the provided categories .
  
                 *Products:* {product}
-                *Categories and Subcategories:* {category}
+                *Categories List:* {category}
  
                 *Let's Think Step by Step:*
-                1. First, carefully identify the main category of the three provided products from the Category and their Subcategories dictionary.
-                2. Next, determine under which subcategory those products specifically belong.
-                3. Lastly, return the main category of the provided products and the subcategory of the identified category.
- 
+                1. First, carefully identify each product with its descrirption provided.
+                2. Next, determine under which category of given list of category each product falls.
+                3. Lastly, assign one suitable category from given list of categories to each product provided.
                 *Output:*
-                - Your output should be a dictionary containing one main category and its corresponding subcategory.
-                - If there is no subcategory for the main category then just return the main category.
+                - Your output should be a dictionary containing product item name and it assigned category.
+                Format:
+                Product Name : Category
+
+                return the dictionary in the provided format named as 'Categories'
  
                
                 \n{format_instructions}\n{product}
@@ -674,7 +682,7 @@ def product_response( product):
         input_variables=["product" , "category"],
         partial_variables={"format_instructions": format_instructions}
     )
-    _input = prompt2.format_prompt(product=product , category = data)
+    _input = prompt2.format_prompt(product=product , category = category)
     with get_openai_callback() as cb:
         result = llm(_input.to_messages())
         # print("get attributes",cb)
@@ -713,7 +721,7 @@ def get_title(memory_dict, session_id):
     except Exception as e:
         return None
  
- 
+search_indexes = [ "AmazonVideo", "Apparel", "Appliances", "ArtsAndCrafts", "Automotive", "Baby", "Beauty", "Books", "Classical", "Collectibles", "Computers", "DigitalMusic", "DigitalEducationalResources", "Electronics", "EverythingElse", "Fashion", "FashionBaby", "FashionBoys", "FashionGirls", "FashionMen", "FashionWomen", "GardenAndOutdoor", "GiftCards", "GroceryAndGourmetFood", "Handmade", "HealthPersonalCare", "HomeAndKitchen", "Industrial", "Jewelry", "KindleStore", "LocalServices", "Luggage", "LuxuryBeauty", "Magazines", "MobileAndAccessories", "MobileApps", "MoviesAndTV", "Music", "MusicalInstruments", "OfficeProducts", "PetSupplies", "Photo", "Shoes", "Software", "SportsAndOutdoors", "ToolsAndHomeImprovement", "ToysAndGames", "VHS", "VideoGames", "Watches"]
 def output_filteration(output_old, flag  ,session_id):
     json = {}
    
@@ -728,6 +736,10 @@ def output_filteration(output_old, flag  ,session_id):
     
         feedback = output_old.strip().split('\n')[-1]    
         product = re.findall(r'Product Name \d+: (.+?)(?:\n|$)', output_old)
+
+        # print(product_response(product , search_indexes))
+        
+
         # print(product)
 
         # print("total products: ",len(product))
