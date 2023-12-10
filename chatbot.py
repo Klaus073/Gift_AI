@@ -136,6 +136,7 @@ def initial_chat(user_input, session_memory):
                     - Recommend only amazon products.
                     - Keep the recommendations with the aspect of budget.
                     - If budget is high then recommend expensive products and if budget is low then recommend accordingly.
+                    - Do not recommend more than 6 products in one pair of recommendations.
                     - FOR PRODUCT RECOMENDATIONS FOLLOW THE FORMAT SPECIFICALLY
                     
                    
@@ -161,7 +162,8 @@ def initial_chat(user_input, session_memory):
                     - Preference: [Specific preferences]
 
                     **Step 5. Present and Refine Products Based on Feedback:**
-                        
+
+                    - You cannot show more than 6 products, Even if user specifically ask for more than 6 But you will return only pair of 6 products.    
                     - Present six product recommendations based on gathered information.
                     - Ask for user feedback on the recommendations.
                     - If the user expresses interest in seeing more options, provide another set of six recommendations.
@@ -729,7 +731,7 @@ def output_filteration(output_old, flag  ,session_id):
         # print(product)
 
         # print("total products: ",len(product))
-        if len(product) == 6:
+        if len(product) >=1:
             output = "Certainly, allow me to engage in a brainstorming session to generate ideas. 🧠💡 "
 
             if product == '':
@@ -816,8 +818,15 @@ def main_input(user_input, user_session_id):
     except Exception as e:
         output = {"error": "Something Went Wrong ...." , "code": "500"}
         return output
+    strings_to_find = ["I'll find","I Will Find", "Give me a moment", "One moment", "hold for a moment" , "for a moment" , " I'll be right back" , "I'll be right back with some options"] 
     
-    if output.count("Product Name") >=3 and output.count("Budget Provided")>=3:
+
+    lowercase_sentence = output.lower()
+    found_strings = [string for string in strings_to_find if string.lower() in lowercase_sentence]
+    if found_strings:
+        print("buffer here...")
+        output = initial_chat("ok",session_memory)
+    if output.count("Product Name") >=1 and output.count("Budget Provided")>=1:
         gflag = "True"
         print("main flag",gflag)
     else:
