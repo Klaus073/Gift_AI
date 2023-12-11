@@ -7,6 +7,7 @@ from langchain.prompts import (
     HumanMessagePromptTemplate,
 )
 import re
+import string
 from langchain.callbacks import get_openai_callback
 from token_stats_db import insert_global_token_stats
 from langchain.chains import LLMChain
@@ -136,6 +137,7 @@ def initial_chat(user_input, session_memory):
                     - Recommend only amazon products.
                     - Keep the recommendations with the aspect of budget.
                     - If budget is high then recommend expensive products and if budget is low then recommend accordingly.
+                    - Do not recommend more than 6 products in one pair of recommendations.
                     - FOR PRODUCT RECOMENDATIONS FOLLOW THE FORMAT SPECIFICALLY
                     
                    
@@ -144,24 +146,31 @@ def initial_chat(user_input, session_memory):
                     - Product Name 1: [Product Name ]
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
+                    - Product Category: [Amazon Search Index for Product 1]
                     - Product Name 2: [Product Name ]
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
+                    - Product Category: [Amazon Search Index for Product 2]
                     - Product Name 3: [Product Name ]
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
+                    - Product Category: [Amazon Search Index for Product 3]
                     - Product Name 4: [Product Name ]
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
+                    - Product Category: [Amazon Search Index for Product 4]
                     - Product Name 5: [Product Name ]
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
+                    - Product Category: [Amazon Search Index for Product 5]
                     - Product Name 6: [Product Name ]
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
+                    - Product Category: [Amazon Search Index for Product 6]
 
                     **Step 5. Present and Refine Products Based on Feedback:**
-                        
+
+                    - You cannot show more than 6 products, Even if user specifically ask for more than 6 But you will return only pair of 6 products.    
                     - Present six product recommendations based on gathered information.
                     - Ask for user feedback on the recommendations.
                     - If the user expresses interest in seeing more options, provide another set of six recommendations.
@@ -635,11 +644,11 @@ def conversation_title( conversation):
  
 # sub_categories =['Kindle Kids', 'Kindle Paperwhite', 'Kindle Oasis', 'Kindle Books', 'Camera & Photo', 'Headphones', 'Video Game Consoles & Accessories', 'Wearable Technology', 'Cell Phones & Accessories', 'Computer Accessories & Peripherals', 'Monitors', 'Laptop Accessories', 'Data Storage', 'Amazon Smart Home', 'Smart Home Lighting', 'Smart Locks and Entry', 'Security Cameras and Systems', 'Painting, Drawing & Art Supplies', 'Beading & Jewelry Making', 'Crafting', 'Sewing', 'Car Care', 'Car Electronics & Accessories', 'Exterior Accessories', 'Interior Accessories', 'Motorcycle & Powersports', 'Activity & Entertainment', 'Apparel & Accessories', 'Baby & Toddler Toys', 'Nursery', 'Travel Gear', 'Makeup', 'Skin Care', 'Hair Care', 'Fragrance', 'Foot, Hand & Nail Care', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Handbags', 'Clothing', 'Shoes', 'Watches', 'Accessories', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Handbags', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Health Care', 'Household Supplies', 'Vitamins & Dietary Supplements', 'Wellness & Relaxation', 'Kitchen & Dining', 'Bedding', 'Bath', 'Furniture', 'Home Décor', 'Wall Art', 'Carry-ons', 'Backpacks', 'Garment bags', 'Travel Totes', 'Dogs', 'Cats', 'Fish & Aquatic Pets', 'Birds', 'Sports and Outdoors', 'Outdoor Recreation', 'Sports & Fitness', 'Tools & Home Improvement', 'Appliances', 'Building Supplies', 'Electrical', 'Action Figures & Statues', 'Arts & Crafts', 'Baby & Toddler Toys', 'Building Toys', 'Video Games', 'PlayStation', 'Xbox', 'Nintendo', 'PC', 'All gift cards', 'eGift cards', 'Gift cards by mail', 'Specialty gift cards']
  
-def product_response( product):
+def product_response( product , category):
     global COUNTER  # Add this line if you want to modify the global variable
     COUNTER = COUNTER + 1
     response_schemas = [
-        ResponseSchema(name="Category", description="a key value of most relevant category and sub category")]
+        ResponseSchema(name="Categories", description="a key value of most relevant category and sub category")]
  
     output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
     format_instructions = output_parser.get_format_instructions()
@@ -649,20 +658,22 @@ def product_response( product):
             HumanMessagePromptTemplate.from_template(
                """
                 *Role:*
-                - Picture yourself as an AI guide, assisting users in finding the perfect category and subcategory for three products.
-                - Your mission is to thoughtfully analyze the products and align them with the provided categories and subcategories.
+                - Picture yourself as an AI guide, assisting users in finding the perfect category of products.
+                - Your mission is to thoughtfully analyze the products and align them with the provided categories .
  
                 *Products:* {product}
-                *Categories and Subcategories:* {category}
+                *Categories List:* {category}
  
                 *Let's Think Step by Step:*
-                1. First, carefully identify the main category of the three provided products from the Category and their Subcategories dictionary.
-                2. Next, determine under which subcategory those products specifically belong.
-                3. Lastly, return the main category of the provided products and the subcategory of the identified category.
- 
+                1. First, carefully identify each product with its descrirption provided.
+                2. Next, determine under which category of given list of category each product falls.
+                3. Lastly, assign one suitable category from given list of categories to each product provided.
                 *Output:*
-                - Your output should be a dictionary containing one main category and its corresponding subcategory.
-                - If there is no subcategory for the main category then just return the main category.
+                - Your output should be a dictionary containing product item name and it assigned category.
+                Format:
+                Product Name : Category
+
+                return the dictionary in the provided format named as 'Categories'
  
                
                 \n{format_instructions}\n{product}
@@ -672,7 +683,7 @@ def product_response( product):
         input_variables=["product" , "category"],
         partial_variables={"format_instructions": format_instructions}
     )
-    _input = prompt2.format_prompt(product=product , category = data)
+    _input = prompt2.format_prompt(product=product , category = category)
     with get_openai_callback() as cb:
         result = llm(_input.to_messages())
         # print("get attributes",cb)
@@ -711,7 +722,7 @@ def get_title(memory_dict, session_id):
     except Exception as e:
         return None
  
- 
+search_indexes = [ "AmazonVideo", "Apparel", "Appliances", "ArtsAndCrafts", "Automotive", "Baby", "Beauty", "Books", "Classical", "Collectibles", "Computers", "DigitalMusic", "DigitalEducationalResources", "Electronics", "EverythingElse", "Fashion", "FashionBaby", "FashionBoys", "FashionGirls", "FashionMen", "FashionWomen", "GardenAndOutdoor", "GiftCards", "GroceryAndGourmetFood", "Handmade", "HealthPersonalCare", "HomeAndKitchen", "Industrial", "Jewelry", "KindleStore", "LocalServices", "Luggage", "LuxuryBeauty", "Magazines", "MobileAndAccessories", "MobileApps", "MoviesAndTV", "Music", "MusicalInstruments", "OfficeProducts", "PetSupplies", "Photo", "Shoes", "Software", "SportsAndOutdoors", "ToolsAndHomeImprovement", "ToysAndGames", "VHS", "VideoGames", "Watches"]
 def output_filteration(output_old, flag  ,session_id):
     json = {}
    
@@ -726,10 +737,14 @@ def output_filteration(output_old, flag  ,session_id):
     
         feedback = output_old.strip().split('\n')[-1]    
         product = re.findall(r'Product Name \d+: (.+?)(?:\n|$)', output_old)
+
+        # print(product_response(product , search_indexes))
+        
+
         # print(product)
 
         # print("total products: ",len(product))
-        if len(product) == 6:
+        if len(product) >=1:
             output = "Certainly, allow me to engage in a brainstorming session to generate ideas. 🧠💡 "
 
             if product == '':
@@ -816,8 +831,16 @@ def main_input(user_input, user_session_id):
     except Exception as e:
         output = {"error": "Something Went Wrong ...." , "code": "500"}
         return output
+    strings_to_find = ["I'll find","Ill find","I Will Find", "Give me a moment", "One moment", "hold for a moment" , "for a moment" , "I'll be right back" , "Ill be right back" , "I'll be right back with some options" , "Ill be right back with some options"  , "just a moment"]
     
-    if output.count("Product Name") >=3 and output.count("Budget Provided")>=3:
+
+    translator = str.maketrans("", "", string.punctuation)
+    lowercase_sentence = output.translate(translator).lower()
+    found_strings = [string for string in strings_to_find if string.lower() in lowercase_sentence]
+    if found_strings:
+        print("buffer here...")
+        output = initial_chat("ok",session_memory)
+    if output.count("Product Name") >=1 and output.count("Budget Provided")>=1:
         gflag = "True"
         print("main flag",gflag)
     else:
