@@ -154,7 +154,7 @@ def get_lowest_sales_rank_asin(json_data):
 
  
  
-def search_items(product):
+def search_items(product , min , max):
     
  
     access_key = access
@@ -228,6 +228,8 @@ def search_items(product):
                         search_index=search_index,
                         item_count=item_count,
                         resources=search_items_resource,
+                        min_price= min,
+                        max_price=max
                     )
                 except ValueError as exception:
                     print("Error in forming SearchItemsRequest: ", exception)
@@ -281,7 +283,7 @@ def getitems(product   ):
  
 
 
-def process_product(product):
+def process_product(product , min , max):
     max_retries = 3
     retry_delay = 2  # seconds
     retries = 0
@@ -289,8 +291,8 @@ def process_product(product):
     while retries < max_retries:
         try:
             # Introduce a delay to avoid rate limiting
-            time.sleep(2)  # Adjust the sleep duration as needed
-            final_item = get_item_with_lowest_sales_rank(filter_products(simplify_json(search_items(product))))
+            time.sleep(5)  # Adjust the sleep duration as needed
+            final_item = get_item_with_lowest_sales_rank(filter_products(simplify_json(search_items(product , min , max))))
             return final_item
         except ValueError as ve:
             # Handle the specific exception, if needed
@@ -312,11 +314,11 @@ def process_product(product):
 
 # Your existing code...
 
-def multiple_items(products):
+def multiple_items(products , min , max):
     all_prod = []
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(process_product, product) for product in products]
+        futures = [executor.submit(process_product, product , min , max) for product in products]
 
         for future in concurrent.futures.as_completed(futures):
             try:
@@ -362,5 +364,5 @@ def multiple_items(products):
 # print(multiple_items(default))
 # print(get_items(["0399590528"]))
 # LOOKING FOR BOOKS RECOMMENDATIONS , NEW TO BOOK READING , BUDGET $500 , ANY GENRE , OPEN TO RECOMMENDATIONS
-# defaul =   ['Custom Calligraphy Family Crest', 'Bespoke Calligraphy Wedding Vows', 'Handmade Calligraphy Wall Scroll', 'Original Calligraphy on Canvas']
-# print(multiple_items(defaul))
+defaul =   ['Custom Calligraphy Family Crest', 'Bespoke Calligraphy Wedding Vows', 'Handmade Calligraphy Wall Scroll', 'Original Calligraphy on Canvas']
+print(multiple_items(defaul,1,50))

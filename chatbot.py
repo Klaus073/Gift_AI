@@ -137,7 +137,7 @@ def initial_chat(user_input, session_memory):
                     - Recommend only amazon products.
                     - Keep the recommendations with the aspect of budget.
                     - If budget is high then recommend expensive products and if budget is low then recommend accordingly.
-                    - Do not recommend more than 6 products in one pair of recommendations.
+                    - Do not recommend more than 8 products in one pair of recommendations.
                     - FOR PRODUCT RECOMENDATIONS FOLLOW THE FORMAT SPECIFICALLY
                     
                    
@@ -167,16 +167,24 @@ def initial_chat(user_input, session_memory):
                     - Budget Provided: [Budget Provided]
                     - Preference: [Specific preferences]
                     - Product Category: [Amazon Search Index for Product 6]
+                    - Product Name 7: [Product Name ]
+                    - Budget Provided: [Budget Provided]
+                    - Preference: [Specific preferences]
+                    - Product Category: [Amazon Search Index for Product 7]
+                    - Product Name 8: [Product Name ]
+                    - Budget Provided: [Budget Provided]
+                    - Preference: [Specific preferences]
+                    - Product Category: [Amazon Search Index for Product 8]
 
                     **Step 5. Present and Refine Products Based on Feedback:**
 
-                    - You cannot show more than 6 products, Even if user specifically ask for more than 6 But you will return only pair of 6 products.    
-                    - Present six product recommendations based on gathered information.
+                    - You cannot show more than 8 products, Even if user specifically ask for more than 8 But you will return only pair of 6 products.    
+                    - Present eight product recommendations based on gathered information.
                     - Ask for user feedback on the recommendations.
-                    - If the user expresses interest in seeing more options, provide another set of six recommendations.
+                    - If the user expresses interest in seeing more options, provide another set of eight recommendations.
                     - if the user changes his interests then must re-assure the budget.
                     - Continuously refine product suggestions based on feedback.
-                    - Repeat the process, presenting refined recommendations six at a time and seeking feedback until the user indicates satisfaction or makes specific changes to preferences.
+                    - Repeat the process, presenting refined recommendations eight at a time and seeking feedback until the user indicates satisfaction or makes specific changes to preferences.
                     - Maintain a positive and engaging tone throughout the interaction.
                     
                     """
@@ -708,9 +716,9 @@ def get_products( product  ):
     result = multiple_items(product )
     return result
    
-def get_amazon_products(product):
+def get_amazon_products(product , min , max):
     try:
-        return get_products(product)
+        return get_products(product , min , max)
     except Exception as e:
         print("error from amazon", e)
         return {"search_result": {"items": []}}
@@ -721,6 +729,24 @@ def get_title(memory_dict, session_id):
         return title.get('Title')
     except Exception as e:
         return None
+    
+
+def extract_budget_range(budget_string):
+    # Define a regular expression pattern for extracting the budget range
+    range_pattern = re.compile(r'\$([\d,]+)-\$([\d,]+)')
+
+    # Attempt to match the range format
+    match = range_pattern.match(budget_string)
+    if match:
+        # Extract and clean the min and max values
+        min_value = int(match.group(1).replace(',', ''))
+        max_value = int(match.group(2).replace(',', ''))
+    else:
+        # If the pattern is not matched, set default values
+        min_value = 1
+        max_value = 500
+
+    return min_value, max_value
  
 search_indexes = [ "AmazonVideo", "Apparel", "Appliances", "ArtsAndCrafts", "Automotive", "Baby", "Beauty", "Books", "Classical", "Collectibles", "Computers", "DigitalMusic", "DigitalEducationalResources", "Electronics", "EverythingElse", "Fashion", "FashionBaby", "FashionBoys", "FashionGirls", "FashionMen", "FashionWomen", "GardenAndOutdoor", "GiftCards", "GroceryAndGourmetFood", "Handmade", "HealthPersonalCare", "HomeAndKitchen", "Industrial", "Jewelry", "KindleStore", "LocalServices", "Luggage", "LuxuryBeauty", "Magazines", "MobileAndAccessories", "MobileApps", "MoviesAndTV", "Music", "MusicalInstruments", "OfficeProducts", "PetSupplies", "Photo", "Shoes", "Software", "SportsAndOutdoors", "ToolsAndHomeImprovement", "ToysAndGames", "VHS", "VideoGames", "Watches"]
 def output_filteration(output_old, flag  ,session_id):
@@ -737,6 +763,14 @@ def output_filteration(output_old, flag  ,session_id):
     
         feedback = output_old.strip().split('\n')[-1]    
         product = re.findall(r'Product Name \d+: (.+?)(?:\n|$)', output_old)
+        first_budget_match = re.search(r'Budget Provided: (\$.+)', output_old)
+        
+        # Extract and store the budget range
+        if first_budget_match:
+            budget_range = extract_budget_range(first_budget_match.group(1))
+            print(f"First Product Budget Range: Min = {budget_range[0]}, Max = {budget_range[1]}")
+        else:
+            print("No budget information found.")
 
         # print(product_response(product , search_indexes))
         
@@ -752,7 +786,7 @@ def output_filteration(output_old, flag  ,session_id):
 
             with ProcessPoolExecutor() as executor:
                 # Run the functions in parallel
-                future_amazon = executor.submit(get_amazon_products, product)
+                future_amazon = executor.submit(get_amazon_products, product ,budget_range[0] ,budget_range[1] )
                 future_title = executor.submit(get_title, memory_dict, session_id)
 
                 # Wait for both tasks to complete
@@ -838,8 +872,8 @@ def main_input(user_input, user_session_id):
     lowercase_sentence = output.translate(translator).lower()
     found_strings = [string for string in strings_to_find if string.lower() in lowercase_sentence]
     if found_strings:
-        print("buffer here...")
-        output = initial_chat("ok",session_memory)
+        print("buffer here..." , found_strings)
+        output = initial_chat("ok, show products",session_memory)
     if output.count("Product Name") >=1 and output.count("Budget Provided")>=1:
         gflag = "True"
         print("main flag",gflag)
@@ -869,7 +903,7 @@ def main_input(user_input, user_session_id):
     
         
     
-    # print(output)
+    print(output)
     # print(recommendation_flag)
  
     final_output = output_filteration( output, gflag, user_session_id)
