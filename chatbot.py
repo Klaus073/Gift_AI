@@ -7,6 +7,7 @@ from langchain.prompts import (
     HumanMessagePromptTemplate,
 )
 import re
+import string
 from langchain.callbacks import get_openai_callback
 from token_stats_db import insert_global_token_stats
 from langchain.chains import LLMChain
@@ -830,10 +831,11 @@ def main_input(user_input, user_session_id):
     except Exception as e:
         output = {"error": "Something Went Wrong ...." , "code": "500"}
         return output
-    strings_to_find = ["I'll find","I Will Find", "Give me a moment", "One moment", "hold for a moment" , "for a moment" , " I'll be right back" , "I'll be right back with some options"] 
+    strings_to_find = ["I'll find","Ill find","I Will Find", "Give me a moment", "One moment", "hold for a moment" , "for a moment" , "I'll be right back" , "Ill be right back" , "I'll be right back with some options" , "Ill be right back with some options"  , "just a moment"]
     
 
-    lowercase_sentence = output.lower()
+    translator = str.maketrans("", "", string.punctuation)
+    lowercase_sentence = output.translate(translator).lower()
     found_strings = [string for string in strings_to_find if string.lower() in lowercase_sentence]
     if found_strings:
         print("buffer here...")
