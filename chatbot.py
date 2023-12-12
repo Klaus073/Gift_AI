@@ -178,7 +178,7 @@ def initial_chat(user_input, session_memory):
 
                     **Step 5. Present and Refine Products Based on Feedback:**
 
-                    - You cannot show more than 8 products, Even if user specifically ask for more than 8 But you will return only pair of 6 products.    
+                    - You cannot show lower than 8 products and more than 8 products, Even if user specifically ask for more than 8 But you will return only pair of 6 products.    
                     - Present eight product recommendations based on gathered information.
                     - Ask for user feedback on the recommendations.
                     - If the user expresses interest in seeing more options, provide another set of eight recommendations.
