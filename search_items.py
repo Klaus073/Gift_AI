@@ -154,7 +154,7 @@ def get_lowest_sales_rank_asin(json_data):
 
  
  
-def search_items(product):
+def search_items(product, min , max):
     
  
     access_key = access
@@ -198,7 +198,7 @@ def search_items(product):
             title=keywords,
             search_index=search_index,
             item_count=item_count,
-            resources=search_items_resource,
+            resources=search_items_resource
         )
     except ValueError as exception:
         print("Error in forming SearchItemsRequest: ", exception)
@@ -218,7 +218,7 @@ def search_items(product):
             print("Error message", response.errors[0].message)
             if  response.errors[0].code=="NoResults":
                 # print("here")
-                time.sleep(1)
+                time.sleep(3)
                 try:
                     search_items_request = SearchItemsRequest(
             
@@ -227,7 +227,7 @@ def search_items(product):
                         keywords=keywords,
                         search_index=search_index,
                         item_count=item_count,
-                        resources=search_items_resource,
+                        resources=search_items_resource
                     )
                 except ValueError as exception:
                     print("Error in forming SearchItemsRequest: ", exception)
@@ -312,36 +312,35 @@ def process_product(product):
 
 # Your existing code...
 
-def multiple_items(products):
+def multiple_items(products, min , max):
     all_prod = []
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(process_product, product) for product in products]
-
-        for future in concurrent.futures.as_completed(futures):
-            try:
-                result = future.result()
-                if result:
-                    all_prod.append(result)
-            except Exception as e:
-                # Handle exceptions that may occur during processing
-                print("Error:", str(e))
     
-    if len(all_prod) < 6:
-        print("lower than 6: ", len(all_prod))
+    if isinstance(products, list):
+        for i in products:
+            try:
+                final_item = get_item_with_lowest_sales_rank(filter_products(simplify_json(search_items(i, min , max))))
+                all_prod.append(final_item)
+            except ValueError as ve:
+                # Handle the specific exception, if needed
+                print("value error")
+                pass
+            except Exception as e:
+                # Handle the general exception, if needed
+                print("ee |",str(e))
+                pass
 
     # Replicate products randomly and shuffle if the length is not 6
-    while len(all_prod) < 6:
-        random_product = random.choice(all_prod)
-        all_prod.append(random_product)
+    # while len(all_prod) < 6:
+    #     random_product = random.choice(all_prod)
+    #     all_prod.append(random_product)
 
-    # Shuffle the list
-    random.shuffle(all_prod)
+    # # Shuffle the list
+    # random.shuffle(all_prod)
 
     products_json = {
         "search_result": {
-            "items": all_prod,
-            "total_result_count": len(all_prod)
+            "items": all_prod[:6],
+            "total_result_count": len(all_prod[:6])
         }
     }
 
@@ -363,4 +362,4 @@ def multiple_items(products):
 # print(get_items(["0399590528"]))
 # LOOKING FOR BOOKS RECOMMENDATIONS , NEW TO BOOK READING , BUDGET $500 , ANY GENRE , OPEN TO RECOMMENDATIONS
 # defaul =   ['Custom Calligraphy Family Crest', 'Bespoke Calligraphy Wedding Vows', 'Handmade Calligraphy Wall Scroll', 'Original Calligraphy on Canvas']
-# print(multiple_items(defaul))
+# print(search_items("spider man miles morales"))
