@@ -208,7 +208,8 @@ def search_items(product, min , max):
  
         """ Sending request """
         # NOTE - Check if response exists in cache, return if it does otherwise send request to paapi
-        response = default_api.search_items(search_items_request)
+        thread = default_api.search_items(search_items_request, async_req=True)
+        response = thread.get()
         # response = get_cached_response(search_items_request, default_api.search_items)
         # print(response)
        
@@ -218,7 +219,7 @@ def search_items(product, min , max):
             print("Error message", response.errors[0].message)
             if  response.errors[0].code=="NoResults":
                 # print("here")
-                time.sleep(3)
+                time.sleep(1)
                 try:
                     search_items_request = SearchItemsRequest(
             

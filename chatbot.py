@@ -878,7 +878,7 @@ def main_input(user_input, user_session_id):
     except Exception as e:
         output = {"error": "Something Went Wrong ...." , "code": "500"}
         return output
-    strings_to_find = ["I'll find","Ill find","I Will Find", "Give me a moment", "One moment", "hold for a moment" , "for a moment" , "I'll be right back" , "Ill be right back" , "I'll be right back with some options" , "Ill be right back with some options"  , "just a moment"]
+    strings_to_find = ["I'll find","Ill find","I Will Find", "Give me a moment", "One moment", "hold for a moment" , "for a moment" , "I'll be right back" , "Ill be right back" , "I'll be right back with some options" , "Ill be right back with some options"  , "just a moment" , "Ill get right on it" , " I'll get right on it"]
     
 
     translator = str.maketrans("", "", string.punctuation)
