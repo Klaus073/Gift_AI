@@ -818,7 +818,7 @@ def output_filteration(output_old, flag  ,session_id):
                 json["result"] = output
                 json["session_id"] = session_id
 
-            json["Title"] = title
+            json["Title"] = new
             json["feedback"] = feedback 
         else:
             try:

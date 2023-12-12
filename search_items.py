@@ -313,6 +313,18 @@ def process_product(product):
 
 # Your existing code...
 
+def remove_duplicates(products):
+    unique_products = []
+    seen_asins = set()
+
+    for product in products:
+        asin = product.get("asin")
+        if asin not in seen_asins:
+            unique_products.append(product)
+            seen_asins.add(asin)
+
+    return unique_products
+
 def multiple_items(products, min , max):
     all_prod = []
     
@@ -337,11 +349,13 @@ def multiple_items(products, min , max):
 
     # # Shuffle the list
     # random.shuffle(all_prod)
-
+    unique_products_list = remove_duplicates(all_prod)
+    if len(unique_products_list)>6:
+        six_prod = unique_products_list[:6]
     products_json = {
         "search_result": {
-            "items": all_prod[:6],
-            "total_result_count": len(all_prod[:6])
+            "items": six_prod,
+            "total_result_count": len(six_prod)
         }
     }
 
