@@ -140,41 +140,32 @@ def initial_chat(user_input, session_memory):
                     - Do not recommend more than 8 products in one pair of recommendations.
                     - FOR PRODUCT RECOMENDATIONS FOLLOW THE FORMAT SPECIFICALLY
                     
-                   
-
                     ###Recommendation Format:###
-                    - Product Name 1: [Product Name ]
+                    - Product Name 1: Product Name 
+                    - Budget Provided: Budget Provided
+                   
+                   
+                    - Product Name 2:[Product Name 
+                    - Budget Provided: Budget Provided
+                    
+                    
+                    - Product Name 3: Product Name 
+                    - Budget Provided: Budget Provided
+                    
+                    - Product Name 4: Product Name 
+                    - Budget Provided: Budget Provided
+                   
+                    - Product Name 5: Product Name 
+                    - Budget Provided: Budget Provided
+                    
+                    - Product Name 6: Product Name 
+                    - Budget Provided: Budget Provided
+                    
+                    - Product Name 7: Product Name 
+                    - Budget Provided: Budget Provided
+                    
+                    - Product Name 8: Product Name 
                     - Budget Provided: [Budget Provided]
-                    - Preference: [Specific preferences]
-                    - Product Category: [Amazon Search Index for Product 1]
-                    - Product Name 2: [Product Name ]
-                    - Budget Provided: [Budget Provided]
-                    - Preference: [Specific preferences]
-                    - Product Category: [Amazon Search Index for Product 2]
-                    - Product Name 3: [Product Name ]
-                    - Budget Provided: [Budget Provided]
-                    - Preference: [Specific preferences]
-                    - Product Category: [Amazon Search Index for Product 3]
-                    - Product Name 4: [Product Name ]
-                    - Budget Provided: [Budget Provided]
-                    - Preference: [Specific preferences]
-                    - Product Category: [Amazon Search Index for Product 4]
-                    - Product Name 5: [Product Name ]
-                    - Budget Provided: [Budget Provided]
-                    - Preference: [Specific preferences]
-                    - Product Category: [Amazon Search Index for Product 5]
-                    - Product Name 6: [Product Name ]
-                    - Budget Provided: [Budget Provided]
-                    - Preference: [Specific preferences]
-                    - Product Category: [Amazon Search Index for Product 6]
-                    - Product Name 7: [Product Name ]
-                    - Budget Provided: [Budget Provided]
-                    - Preference: [Specific preferences]
-                    - Product Category: [Amazon Search Index for Product 7]
-                    - Product Name 8: [Product Name ]
-                    - Budget Provided: [Budget Provided]
-                    - Preference: [Specific preferences]
-                    - Product Category: [Amazon Search Index for Product 8]
 
                     **Step 5. Present and Refine Products Based on Feedback:**
 
