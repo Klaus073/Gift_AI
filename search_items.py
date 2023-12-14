@@ -11,13 +11,11 @@ import os
 import random
 import json
 import concurrent.futures
-
-
+from cache_service import get_cached_response
 import logging
 
 # Configure the logging module
 logging.basicConfig(level=logging.INFO)
- 
 access = os.environ.get('ACCESS_KEY')
  
 secret = os.environ.get('SECRET_KEY')
@@ -28,6 +26,8 @@ logging.info(f"Access Key: {access}")
 logging.info(f"Secret Key: {secret}")
 logging.info(f"Partner Tag Key: {partner}")
 def filter_products(products):
+    if products == None:
+        return None
     filtered_products = []
     skipped_count = 0
     # print("here 0")
@@ -59,6 +59,8 @@ def filter_products(products):
 
 
 def get_item_with_lowest_sales_rank(items):
+    if items == None:
+        return None
     # Initialize the variable to store the item with the lowest sales rank
     lowest_sales_rank_item = None
     items = items["search_result"]["items"]
@@ -163,10 +165,11 @@ def get_lowest_sales_rank_asin(json_data):
  
 def search_items(product, min , max):
     
- 
+    logging.info(f"got here")
     access_key = access
     secret_key = secret
     partner_tag = partner
+    error = f""
  
     host = "webservices.amazon.com"
     region = "us-east-1"
@@ -209,7 +212,12 @@ def search_items(product, min , max):
         )
     except ValueError as exception:
         print("Error in forming SearchItemsRequest: ", exception)
-        return
+        logging.info(f"Error in forming SearchItemsRequest: {exception}")
+        
+        error = exception
+        response = None
+        print("eeeee" , error)
+        # return
  
     try:
  
@@ -217,6 +225,7 @@ def search_items(product, min , max):
         # NOTE - Check if response exists in cache, return if it does otherwise send request to paapi
         thread = default_api.search_items(search_items_request, async_req=True)
         response = thread.get()
+        logging.info(f"title response: {response}")
         # response = get_cached_response(search_items_request, default_api.search_items)
         # print(response)
         logging.info(f"Partner Tag Key: {response}")
@@ -239,35 +248,53 @@ def search_items(product, min , max):
                     )
                 except ValueError as exception:
                     print("Error in forming SearchItemsRequest: ", exception)
-                    return
+                    error = exception
+                    print("sdfsdf" , error)
+                    response = None
+                    
                 try:
                      response = default_api.search_items(search_items_request)
-                     logging.info(f"Partner Tag Key: {response}")
+                     logging.info(f"keyword response: {response}")
                 except ValueError as exception:
                     print("Error in forming SearchItemsRequest: ", exception)
-                    return
+                    # print("eeeee" , error)
+                    error = exception
+                    response = None
+                    
 
  
     except ApiException as exception:
+        if exception.status == 429:
+            print("got here")
+            response = None
         print("Error calling PA-API 5.0!")
         print("Status code:", exception.status)
         print("Errors :", exception.body)
         print("Request ID:", exception.headers["x-amzn-RequestId"])
+        error = f"Status code: {exception.status}. Errors: {exception.body} "
+        response = None
  
     except TypeError as exception:
         print("TypeError :", exception)
+        error = exception
+        response = None
  
     except ValueError as exception:
         print("ValueError :", exception)
- 
+        error = exception
+        response = None
     except Exception as exception:
         print("Exception :", exception)
+        error = exception
+        response = None
  
-    return response
+    return response , error
  
  
 def simplify_json(json_obj):
     result = {}
+    if json_obj == None:
+        return None
  
     def flatten(obj, prefix=""):
         if isinstance(obj, dict):
@@ -335,11 +362,20 @@ def remove_duplicates(products):
 
 def multiple_items(products, min , max):
     all_prod = []
+    errors = f""
+    no_prod =""
     
     if isinstance(products, list):
         for i in products:
             try:
-                final_item = get_item_with_lowest_sales_rank(filter_products(simplify_json(search_items(i, min , max))))
+                prod,error = search_items(i, min , max)
+                if prod == None:
+                    no_prod = prod
+                    errors = error
+                     
+                    
+                final_item, error = get_item_with_lowest_sales_rank(filter_products(simplify_json(prod)))
+                
                 all_prod.append(final_item)
             except ValueError as ve:
                 # Handle the specific exception, if needed
@@ -357,9 +393,11 @@ def multiple_items(products, min , max):
 
     # # Shuffle the list
     # random.shuffle(all_prod)
+    
     unique_products_list = remove_duplicates(all_prod)
     if len(unique_products_list)>6:
         six_prod = unique_products_list[:6]
+    six_prod = unique_products_list
     products_json = {
         "search_result": {
             "items": six_prod,
@@ -367,7 +405,7 @@ def multiple_items(products, min , max):
         }
     }
 
-    return products_json
+    return products_json , no_prod , errors
 
 
 
@@ -385,4 +423,4 @@ def multiple_items(products, min , max):
 # print(get_items(["0399590528"]))
 # LOOKING FOR BOOKS RECOMMENDATIONS , NEW TO BOOK READING , BUDGET $500 , ANY GENRE , OPEN TO RECOMMENDATIONS
 # defaul =   ['Custom Calligraphy Family Crest', 'Bespoke Calligraphy Wedding Vows', 'Handmade Calligraphy Wall Scroll', 'Original Calligraphy on Canvas']
-# print(search_items("spider man miles morales"))
+# print(multiple_items(["spider man miles morales"],1,2))
