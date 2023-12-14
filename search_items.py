@@ -12,7 +12,10 @@ import random
 import json
 import concurrent.futures
 from cache_service import get_cached_response
- 
+import logging
+
+# Configure the logging module
+logging.basicConfig(level=logging.INFO)
 access = os.environ.get('ACCESS_KEY')
  
 secret = os.environ.get('SECRET_KEY')
@@ -160,7 +163,7 @@ def get_lowest_sales_rank_asin(json_data):
  
 def search_items(product, min , max):
     
- 
+    logging.info(f"got here")
     access_key = access
     secret_key = secret
     partner_tag = partner
@@ -207,6 +210,7 @@ def search_items(product, min , max):
         )
     except ValueError as exception:
         print("Error in forming SearchItemsRequest: ", exception)
+        logging.info(f"Error in forming SearchItemsRequest: {exception}")
         
         error = exception
         response = None
@@ -219,6 +223,7 @@ def search_items(product, min , max):
         # NOTE - Check if response exists in cache, return if it does otherwise send request to paapi
         thread = default_api.search_items(search_items_request, async_req=True)
         response = thread.get()
+        logging.info(f"title response: {response}")
         # response = get_cached_response(search_items_request, default_api.search_items)
         # print(response)
        
@@ -247,6 +252,7 @@ def search_items(product, min , max):
                     
                 try:
                      response = default_api.search_items(search_items_request)
+                     logging.info(f"keyword response: {response}")
                 except ValueError as exception:
                     print("Error in forming SearchItemsRequest: ", exception)
                     # print("eeeee" , error)

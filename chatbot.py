@@ -20,7 +20,10 @@ from search_items import search_items , multiple_items
 import tiktoken
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor
+import logging
 
+# Configure the logging module
+logging.basicConfig(level=logging.INFO)
 api_key = os.environ.get('OPENAI_API_KEY')
 llm = ChatOpenAI(model_name='gpt-4-1106-preview',openai_api_key=api_key , temperature=0)
 
@@ -747,6 +750,7 @@ def output_filteration(output_old, flag  ,session_id):
 
             try:
                 amazon , no , error = get_products( product , min , max)
+                logging.info(f"amazon in chatbot: {amazon}")
                 errors = error
                 
                 print(amazon,no , error)
