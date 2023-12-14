@@ -76,99 +76,65 @@ def initial_chat(user_input, session_memory):
                     - Embody the persona of "THINK GIFT," a friendly assistant dedicated to helping users discover the perfect gift.
                     - Engage users in lively conversations, posing follow-up questions, and understanding their gift preferences.
                     - Maintain tone defined below, playing the role of a virtual gift advisor.
-
+ 
                     ** Tone **
                     Generate responses in a warm, friendly, and helpful tone. \
                     Expressing enthusiasm and interest in the user's input or topic. \
                     Provide information or suggestions with a positive and engaging demeanor.\
                     You will adjust the tones based on the context.
                     Use responsive emojis in the response to make it exciting.\  
-
+ 
+                    ** DO NOT:**
+                    - Your response cannot exceed more than one line and you cannot ask morethan one follow-up question in one response.
+                    - do not prompt the user pre recommendations response like "Great, I'll find some intriguing PS5 puzzle games within your $60 budget. One moment, please."
+                    - And instead just jumpt to suggesting the 8 products titles.
+ 
                     **Lets do it step by step**  
-                    ** Step 1: Filter Human Input**
-                    - Itentify if the user is asking about any product recommendation or asking general information.
-                    - Do not entertain requests for writing code or anything unrelated to gift suggestions.
-                    - Focus solely on gift-related queries to enhance the user experience.
-                    - Deny entertaining any qury that require any additional knowledge other than products.
-                    - Your are job is not to write code or provide wikipedia type information.
-                    - If the the user query is valid then move to next step.
-                 
-                    ** Step 2: Self Understanding **
-                    - Carefully analyze users input of product and category.
-                    - Get familiarize the with that product or theme and show you complete understanding.
-                    - when user define a specific theme then add the theme in recommended product title.
-
-                    ** Step 3. Ask One Follow-up At a Time:**
-                    - Begin by asking one follow-up question to maintain a conversational flow.
-                    - Limit the number of questions asked per interaction to one.
-                    - Your response cannot exceed 1 line.
+                    **Steps:**
+                    1. **Filter Human Input:**
+                    - Focus on gift-related queries only. Do not entertain requests unrelated to gift suggestions.
+                    2. **Self Understanding:**
+                    - Analyze user input, get familiar with the product or theme. Acknowledge specific themes in recommended product titles.
+                    3. **Ask One Follow-up At a Time:**
+                    - Maintain a conversational flow. Limit questions to one per interaction.
+                    4. **Ensure User Understanding:**
+                    - Ask follow-up questions with sample answers. Tailor assistance based on adult preferences. Assume unfamiliar products per user request.
+                    5. **Follow-up Questioning with Record:**
+                    - Engage in follow-up questions, keeping a record. Emphasize clarity and flexibility.
+                    6. **Gather Information:**
+                    - Identify categories, ask relative questions. Collect info about the user's product of interest. Clarify vague budget responses.
+                    7. **Short Follow-up Questions:**
+                    - Follow Step 2. Provide recommendations immediately.
  
-                    ** Step 4. Ensure User Understanding:**
-                    - Ask follow-up questions by providing sample answers.
-                    - If a user's input suggests adult preferences, offer assistance accordingly.
-                    - Assume the existence of a user-requested unfamiliar product and proceed with information gathering.
- 
-                    ** Step 5. Follow-up Questioning with Record:**
-                    - Engage in follow-up questions to understand user preferences.
-                    - Keep a record of the previous response to guide the conversation.
-                    - Emphasize clarity but allow flexibility in the conversation.
- 
-                    ** Step 6. Gather Information:**
-                    - Identify the category from user input and ask relative questions to that category, going in-depth if needed.
-                    - Collect necessary information about the product the user is interested in.
-                    - If the budget response is vague, kindly ask for a specific range.
-                    - Ensure a comprehensive understanding of their requirements.
-
-                    ** Step 7: Short Follow-up Questions:**
-                    - Follow Step 2.
-                    - Provide recommendations immediately without a buffer message.
-                    - Keep follow-up questions to 1 line max.
-
-                    **Note for Handling Budget Exceedance:**
-                    - If the user's request suggests a product or category beyond the defined budget, inform the user politely.
-                    - Suggest adjusting the budget or provide alternative recommendations within the specified budget.
-                    - Encourage the user to redefine the budget to better match their preferences.
- 
-                    **Note for Introducing New Products and Categories:**
-                    - When the user expresses interest in a new product and category, prompt them to redefine the budget for the specific request.
-                    - This ensures that the recommendations align with the user's budget for each unique preference.
-
-                    **Step 4. Recommendation Format Summary, Recommendation:**
-                    - Recommend only amazon products.
-                    - Keep the recommendations with the aspect of budget.
-                    - If budget is high then recommend expensive products and if budget is low then recommend accordingly.
-                    - Do not recommend more than 8 products in one pair of recommendations.
+                    **Handling Budget Exceedance:**
+                    - Politely inform users of budget mismatches. Suggest adjusting the budget or offer alternatives. Encourage users to redefine the budget.
+                    **Introducing New Products/Categories:**
+                    - Prompt users to adjust the budget for new requests.
+                   
+                    **Recommendation Format Summary:**
+                    - Recommend Amazon products. Align recommendations with the budget. Keep it within 8 products. Format recommendations based on budget (high or low).- If budget is high then recommend expensive products and if budget is low then recommend accordingly.
+                    - Do not recommend more than 8 products in one response of recommendations.
                     - FOR PRODUCT RECOMENDATIONS FOLLOW THE FORMAT SPECIFICALLY
-                    
+                   
                     ###Recommendation Format:###
-                    - Product Name 1: Product Name 
+                    - Product Name 1: Product Name
                     - Budget Provided: Budget Provided
-                   
-                   
-                    - Product Name 2:[Product Name 
+                    - Product Name 2:[Product Name
                     - Budget Provided: Budget Provided
-                    
-                    
-                    - Product Name 3: Product Name 
+                    - Product Name 3: Product Name
                     - Budget Provided: Budget Provided
-                    
-                    - Product Name 4: Product Name 
+                    - Product Name 4: Product Name
                     - Budget Provided: Budget Provided
-                   
-                    - Product Name 5: Product Name 
+                    - Product Name 5: Product Name
                     - Budget Provided: Budget Provided
-                    
-                    - Product Name 6: Product Name 
+                    - Product Name 6: Product Name
                     - Budget Provided: Budget Provided
-                    
-                    - Product Name 7: Product Name 
+                    - Product Name 7: Product Name
                     - Budget Provided: Budget Provided
-                    
-                    - Product Name 8: Product Name 
+                    - Product Name 8: Product Name
                     - Budget Provided: [Budget Provided]
-
+ 
                     **Step 5. Present and Refine Products Based on Feedback:**
-
                     - You cannot show lower than 8 products and more than 8 products in one pair, Even if user specifically ask for more than 8 or loweer than 8 in one pair But you will return only pair of 8 products.    
                     - Present eight product recommendations based on gathered information.
                     - Ask for user feedback on the recommendations.
@@ -177,7 +143,7 @@ def initial_chat(user_input, session_memory):
                     - Continuously refine product suggestions based on feedback.
                     - Repeat the process, presenting refined recommendations eight at a time and seeking feedback until the user indicates satisfaction or makes specific changes to preferences.
                     - Maintain a positive and engaging tone throughout the interaction.
-                    
+                   
                     """
             ),
             MessagesPlaceholder(variable_name="chat_history"),
@@ -741,6 +707,8 @@ def extract_budget_range(budget_string):
 search_indexes = [ "AmazonVideo", "Apparel", "Appliances", "ArtsAndCrafts", "Automotive", "Baby", "Beauty", "Books", "Classical", "Collectibles", "Computers", "DigitalMusic", "DigitalEducationalResources", "Electronics", "EverythingElse", "Fashion", "FashionBaby", "FashionBoys", "FashionGirls", "FashionMen", "FashionWomen", "GardenAndOutdoor", "GiftCards", "GroceryAndGourmetFood", "Handmade", "HealthPersonalCare", "HomeAndKitchen", "Industrial", "Jewelry", "KindleStore", "LocalServices", "Luggage", "LuxuryBeauty", "Magazines", "MobileAndAccessories", "MobileApps", "MoviesAndTV", "Music", "MusicalInstruments", "OfficeProducts", "PetSupplies", "Photo", "Shoes", "Software", "SportsAndOutdoors", "ToolsAndHomeImprovement", "ToysAndGames", "VHS", "VideoGames", "Watches"]
 def output_filteration(output_old, flag  ,session_id):
     json = {}
+    errors = ""
+    
    
     if flag == "True" or flag == "true" or flag == True:
         # try:
@@ -751,9 +719,9 @@ def output_filteration(output_old, flag  ,session_id):
         # product = parser1.get('product name')
         # # print(parser1)
     
-        feedback = output_old.strip().split('\n')[-1]    
-        product = re.findall(r'Product Name \d+: (.+?)(?:\n|$)', output_old)
-        first_budget_match = re.search(r'Budget Provided: (\$.+)', output_old)
+        feedback = output_old.strip().split('\n')[-1]     # extract feedback from llm 
+        product = re.findall(r'Product Name \d+: (.+?)(?:\n|$)', output_old) # extract products names from llm 
+        first_budget_match = re.search(r'Budget Provided: (\$.+)', output_old)# extract prices from llm 
         
         # Extract and store the budget range
         if first_budget_match:
@@ -775,42 +743,55 @@ def output_filteration(output_old, flag  ,session_id):
         if len(product) >=1:
             output = "Certainly, allow me to engage in a brainstorming session to generate ideas. 🧠💡 "
 
-            if product == '':
-                product = 'gift'
+            
 
             try:
-                amazon = get_products( product , min , max)
+                amazon , no , error = get_products( product , min , max)
+                errors = error
+                
+                print(amazon,no , error)
             except Exception as e:
+                
                 print("error from amazon",e)
             # print("total products from amazon: ",len(amazon["search_result"]["items"]))
-            if (len(amazon["search_result"]["items"])==0):
-                output = "Apologies! 😞 No products were found. Let's try a new search from the beginning. 🔍"
+
+            #check for error from amazon
+            if no == None:
+                
+                output = "Oops! Something went wrong and we could not process your request. Please try again!"
                 json["Product"] = {}
+                json["error"] = errors
                 json["result"] = output
                 json["example"] = []
                 json["session_id"] = session_id
-
-            try:
-                title = conversation_title(memory_dict[session_id].buffer)
-                new = title.get('Title')
-            except Exception as e:
-                new = None
-            # print("title :",new)
-
-            if len(amazon["search_result"]["items"]) == 0:
-                output = "Apologies! 😞 No products were found. Let's try a new search from the beginning. 🔍"
-                json["Product"] = {}
-                json["result"] = output
-                json["example"] = []
-                json["session_id"] = session_id
+                print("in no")
+                return json
             else:
-                json["Product"] = amazon
-                json["example"] = []
-                json["result"] = output
-                json["session_id"] = session_id
+                print("in else")
+                if (len(amazon["search_result"]["items"])==0):
+                    output = "Apologies! 😞 No products were found. Let's try a new search from the beginning. 🔍"
+                    json["Product"] = {}
+                    json["result"] = output
+                    json["example"] = []
+                    json["session_id"] = session_id
+                    print("in len 0")
+                    return json
+                else:
+                    print("in len >1")
+                    try:
+                        title = conversation_title(memory_dict[session_id].buffer)
+                        new = title.get('Title')
+                    except Exception as e:
+                        new = None
+            
+                    json["Product"] = amazon
+                    json["example"] = []
+                    json["result"] = output
+                    json["session_id"] = session_id
 
-            json["Title"] = new
-            json["feedback"] = feedback 
+                    json["Title"] = new
+                    json["feedback"] = feedback 
+                    return json
         else:
             try:
                 parser2 = example_response(output_old)
@@ -829,14 +810,7 @@ def output_filteration(output_old, flag  ,session_id):
             json["result"] = output_old
             json["example"] = unique_example_answers
             json["session_id"] = session_id
-
-
     else:
-        # try:
-        #     output = change_tone( output_old)
-        #     output = output.get('sentence')
-        # except Exception as e:
-        #     output = output_old
         try:
             parser2 = example_response(output_old)
         except Exception as e:
@@ -884,31 +858,6 @@ def main_input(user_input, user_session_id):
     else:
         gflag = "False"
         # print("main flag",gflag)
-
-    # try:
-    #     recommendation_flag = question_or_recommendation(output)
-    #     flag = recommendation_flag.get("flag")
-    # except Exception as e:
-    #     flag = "false"
-        
-    
-    
-    # if p.lower()=="true" or p == True:
-    #     print("-----in herer ---------")
-    #     print(products_and_features(output))
-    # print(p , type(p))
-    # print(output)
-    # print(recommendation_flag)
-    # try:
-    #     parser1 = get_attributes( output)
-    # except Exception as e:
-    #     parser1 = {"product": "" , "flag": "" , "features": {} , "feedback" : ""}
-    
-    
-        
-    
-    # print(output)
-    # print(recommendation_flag)
  
     final_output = output_filteration( output, gflag, user_session_id)
  
@@ -917,4 +866,25 @@ def main_input(user_input, user_session_id):
 # for i in range(5):
 #     inp = input()
 #     print(main_input(inp,"0"))
+tt = """
 
+- Product Name 1: Creed Aventus Eau de Parfum
+- Budget Provided: $200
+- Product Name 2: Tom Ford Noir Extreme
+- Budget Provided: $200
+- Product Name 3: Acqua Di Gio Profumo by Giorgio Armani
+- Budget Provided: $200
+- Product Name 4: Bvlgari Man in Black Eau de Parfum
+- Budget Provided: $200
+- Product Name 5: Montblanc Explorer Eau de Parfum
+- Budget Provided: $200
+- Product Name 6: Viktor&Rolf Spicebomb Extreme Eau de Parfum
+- Budget Provided: $200
+- Product Name 7: Dior Sauvage Eau de Toilette
+- Budget Provided: $200
+- Product Name 8: Versace Eros Flame Eau de Parfum
+- Budget Provided: $200
+
+Do any of these catch your eye for your brother's birthday gift? 🎁✨
+"""
+# print(output_filteration(tt , "True" , "0"))
