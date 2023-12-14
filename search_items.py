@@ -22,7 +22,9 @@ secret = os.environ.get('SECRET_KEY')
  
 partner = os.environ.get('PARTNER_TAG')
 
-
+logging.info(f"Access Key: {access}")
+logging.info(f"Secret Key: {secret}")
+logging.info(f"Partner Tag Key: {partner}")
 def filter_products(products):
     if products == None:
         return None
@@ -226,7 +228,7 @@ def search_items(product, min , max):
         logging.info(f"title response: {response}")
         # response = get_cached_response(search_items_request, default_api.search_items)
         # print(response)
-       
+        logging.info(f"Partner Tag Key: {response}")
         if response.errors is not None:
             print("\nPrinting Errors:\nPrinting First Error Object from list of Errors")
             print("Error code", response.errors[0].code)

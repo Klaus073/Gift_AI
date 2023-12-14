@@ -1,10 +1,14 @@
-version: '3'
+version: '3.7'
 
 services:
-  flaskapp:
-    image: flaskapp-image
-    container_name: flaskapp-container
+  flask-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "5000:4000"
+      - "4000:4000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ACCESS_KEY=${ACCESS_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - PARTNER_TAG=${PARTNER_TAG}

@@ -24,9 +24,12 @@ import logging
 
 # Configure the logging module
 logging.basicConfig(level=logging.INFO)
+
+# Configure the logging module
+logging.basicConfig(level=logging.INFO)
 api_key = os.environ.get('OPENAI_API_KEY')
 llm = ChatOpenAI(model_name='gpt-4-1106-preview',openai_api_key=api_key , temperature=0)
-
+logging.info(f"Open AI: {api_key}")
 memory_dict = {}
 memory_dict_time = {}
 # global_token_stats = {
