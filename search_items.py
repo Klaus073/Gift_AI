@@ -11,23 +11,26 @@ import os
 import random
 import json
 import concurrent.futures
-from cache_service import get_cached_response
-import logging
 
-# Configure the logging module
-logging.basicConfig(level=logging.INFO)
+
+# import logging
+
+# # Configure the logging module
+# logging.basicConfig(level=logging.INFO)
+ 
 access = os.environ.get('ACCESS_KEY')
  
 secret = os.environ.get('SECRET_KEY')
+# access = "AKIAIMSPJ6J2DKIORHNQ"
+# secret = "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"
+# print(access , secret)
  
 partner = os.environ.get('PARTNER_TAG')
 
-logging.info(f"Access Key: {access}")
-logging.info(f"Secret Key: {secret}")
-logging.info(f"Partner Tag Key: {partner}")
+# logging.info(f"Access Key: {access}")
+# logging.info(f"Secret Key: {secret}")
+# logging.info(f"Partner Tag Key: {partner}")
 def filter_products(products):
-    if products == None:
-        return None
     filtered_products = []
     skipped_count = 0
     # print("here 0")
@@ -59,8 +62,6 @@ def filter_products(products):
 
 
 def get_item_with_lowest_sales_rank(items):
-    if items == None:
-        return None
     # Initialize the variable to store the item with the lowest sales rank
     lowest_sales_rank_item = None
     items = items["search_result"]["items"]
@@ -165,11 +166,10 @@ def get_lowest_sales_rank_asin(json_data):
  
 def search_items(product, min , max):
     
-    logging.info(f"got here")
+ 
     access_key = access
     secret_key = secret
     partner_tag = partner
-    error = f""
  
     host = "webservices.amazon.com"
     region = "us-east-1"
@@ -212,12 +212,7 @@ def search_items(product, min , max):
         )
     except ValueError as exception:
         print("Error in forming SearchItemsRequest: ", exception)
-        logging.info(f"Error in forming SearchItemsRequest: {exception}")
-        
-        error = exception
-        response = None
-        print("eeeee" , error)
-        # return
+        return
  
     try:
  
@@ -225,10 +220,9 @@ def search_items(product, min , max):
         # NOTE - Check if response exists in cache, return if it does otherwise send request to paapi
         thread = default_api.search_items(search_items_request, async_req=True)
         response = thread.get()
-        logging.info(f"title response: {response}")
         # response = get_cached_response(search_items_request, default_api.search_items)
         # print(response)
-        logging.info(f"Partner Tag Key: {response}")
+        # logging.info(f"Partner Tag Key: {response}")
         if response.errors is not None:
             print("\nPrinting Errors:\nPrinting First Error Object from list of Errors")
             print("Error code", response.errors[0].code)
@@ -248,53 +242,35 @@ def search_items(product, min , max):
                     )
                 except ValueError as exception:
                     print("Error in forming SearchItemsRequest: ", exception)
-                    error = exception
-                    print("sdfsdf" , error)
-                    response = None
-                    
+                    return
                 try:
                      response = default_api.search_items(search_items_request)
-                     logging.info(f"keyword response: {response}")
+                    #  logging.info(f"Partner Tag Key: {response}")
                 except ValueError as exception:
                     print("Error in forming SearchItemsRequest: ", exception)
-                    # print("eeeee" , error)
-                    error = exception
-                    response = None
-                    
+                    return
 
  
     except ApiException as exception:
-        if exception.status == 429:
-            print("got here")
-            response = None
         print("Error calling PA-API 5.0!")
         print("Status code:", exception.status)
         print("Errors :", exception.body)
         print("Request ID:", exception.headers["x-amzn-RequestId"])
-        error = f"Status code: {exception.status}. Errors: {exception.body} "
-        response = None
  
     except TypeError as exception:
         print("TypeError :", exception)
-        error = exception
-        response = None
  
     except ValueError as exception:
         print("ValueError :", exception)
-        error = exception
-        response = None
+ 
     except Exception as exception:
         print("Exception :", exception)
-        error = exception
-        response = None
  
-    return response , error
+    return response
  
  
 def simplify_json(json_obj):
     result = {}
-    if json_obj == None:
-        return None
  
     def flatten(obj, prefix=""):
         if isinstance(obj, dict):
@@ -362,20 +338,11 @@ def remove_duplicates(products):
 
 def multiple_items(products, min , max):
     all_prod = []
-    errors = f""
-    no_prod =""
     
     if isinstance(products, list):
         for i in products:
             try:
-                prod,error = search_items(i, min , max)
-                if prod == None:
-                    no_prod = prod
-                    errors = error
-                     
-                    
-                final_item, error = get_item_with_lowest_sales_rank(filter_products(simplify_json(prod)))
-                
+                final_item = get_item_with_lowest_sales_rank(filter_products(simplify_json(search_items(i, min , max))))
                 all_prod.append(final_item)
             except ValueError as ve:
                 # Handle the specific exception, if needed
@@ -393,11 +360,9 @@ def multiple_items(products, min , max):
 
     # # Shuffle the list
     # random.shuffle(all_prod)
-    
     unique_products_list = remove_duplicates(all_prod)
     if len(unique_products_list)>6:
         six_prod = unique_products_list[:6]
-    six_prod = unique_products_list
     products_json = {
         "search_result": {
             "items": six_prod,
@@ -405,22 +370,4 @@ def multiple_items(products, min , max):
         }
     }
 
-    return products_json , no_prod , errors
-
-
-
-# def measure_time(func, *args, **kwargs):
-#     start_time = time.time()
-#     result = func(*args, **kwargs)
-#     end_time = time.time()
-#     elapsed_time = end_time - start_time
-#     return result, elapsed_time
-# products = ['Deus Ex: Mankind Divided', 'Alien: Isolation', 'Nier: Automata', 'Elite Dangerous', 'Titanfall 2', 'XCOM 2']
-# result, time_taken = measure_time(multiple_items, products)
-# print(f"Function took {time_taken} seconds")
-    
-# print(multiple_items(default))
-# print(get_items(["0399590528"]))
-# LOOKING FOR BOOKS RECOMMENDATIONS , NEW TO BOOK READING , BUDGET $500 , ANY GENRE , OPEN TO RECOMMENDATIONS
-# defaul =   ['Custom Calligraphy Family Crest', 'Bespoke Calligraphy Wedding Vows', 'Handmade Calligraphy Wall Scroll', 'Original Calligraphy on Canvas']
-# print(multiple_items(["spider man miles morales"],1,2))
+    return products_json
