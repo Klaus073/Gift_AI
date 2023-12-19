@@ -362,6 +362,8 @@ def multiple_items(products, min , max):
     unique_products_list = remove_duplicates(all_prod)
     if len(unique_products_list)>6:
         six_prod = unique_products_list[:6]
+    else:
+        six_prod = unique_products_list
     products_json = {
         "search_result": {
             "items": six_prod,
