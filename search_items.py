@@ -22,7 +22,7 @@ access = os.environ.get('ACCESS_KEY')
  
 secret = os.environ.get('SECRET_KEY')
 
-print(access , secret)
+
  
 partner = os.environ.get('PARTNER_TAG')
 
