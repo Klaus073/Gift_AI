@@ -13,22 +13,23 @@ import json
 import concurrent.futures
 
 
-import logging
+# import logging
 
-# Configure the logging module
-logging.basicConfig(level=logging.INFO)
+# # Configure the logging module
+# logging.basicConfig(level=logging.INFO)
  
-# access = os.environ.get('ACCESS_KEY')
+access = os.environ.get('ACCESS_KEY')
  
-# secret = os.environ.get('SECRET_KEY')
-access = "AKIAIMSPJ6J2DKIORHNQ"
-secret = "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"
+secret = os.environ.get('SECRET_KEY')
+# access = "AKIAIMSPJ6J2DKIORHNQ"
+# secret = "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"
+# print(access , secret)
  
 partner = os.environ.get('PARTNER_TAG')
 
-logging.info(f"Access Key: {access}")
-logging.info(f"Secret Key: {secret}")
-logging.info(f"Partner Tag Key: {partner}")
+# logging.info(f"Access Key: {access}")
+# logging.info(f"Secret Key: {secret}")
+# logging.info(f"Partner Tag Key: {partner}")
 def filter_products(products):
     filtered_products = []
     skipped_count = 0
@@ -221,7 +222,7 @@ def search_items(product, min , max):
         response = thread.get()
         # response = get_cached_response(search_items_request, default_api.search_items)
         # print(response)
-        logging.info(f"Partner Tag Key: {response}")
+        # logging.info(f"Partner Tag Key: {response}")
         if response.errors is not None:
             print("\nPrinting Errors:\nPrinting First Error Object from list of Errors")
             print("Error code", response.errors[0].code)
@@ -244,7 +245,7 @@ def search_items(product, min , max):
                     return
                 try:
                      response = default_api.search_items(search_items_request)
-                     logging.info(f"Partner Tag Key: {response}")
+                    #  logging.info(f"Partner Tag Key: {response}")
                 except ValueError as exception:
                     print("Error in forming SearchItemsRequest: ", exception)
                     return

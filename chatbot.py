@@ -713,8 +713,6 @@ def extract_budget_range(budget_string):
 search_indexes = [ "AmazonVideo", "Apparel", "Appliances", "ArtsAndCrafts", "Automotive", "Baby", "Beauty", "Books", "Classical", "Collectibles", "Computers", "DigitalMusic", "DigitalEducationalResources", "Electronics", "EverythingElse", "Fashion", "FashionBaby", "FashionBoys", "FashionGirls", "FashionMen", "FashionWomen", "GardenAndOutdoor", "GiftCards", "GroceryAndGourmetFood", "Handmade", "HealthPersonalCare", "HomeAndKitchen", "Industrial", "Jewelry", "KindleStore", "LocalServices", "Luggage", "LuxuryBeauty", "Magazines", "MobileAndAccessories", "MobileApps", "MoviesAndTV", "Music", "MusicalInstruments", "OfficeProducts", "PetSupplies", "Photo", "Shoes", "Software", "SportsAndOutdoors", "ToolsAndHomeImprovement", "ToysAndGames", "VHS", "VideoGames", "Watches"]
 def output_filteration(output_old, flag  ,session_id):
     json = {}
-    errors = ""
-    
    
     if flag == "True" or flag == "true" or flag == True:
         # try:
@@ -725,9 +723,9 @@ def output_filteration(output_old, flag  ,session_id):
         # product = parser1.get('product name')
         # # print(parser1)
     
-        feedback = output_old.strip().split('\n')[-1]     # extract feedback from llm 
-        product = re.findall(r'Product Name \d+: (.+?)(?:\n|$)', output_old) # extract products names from llm 
-        first_budget_match = re.search(r'Budget Provided: (\$.+)', output_old)# extract prices from llm 
+        feedback = output_old.strip().split('\n')[-1]    
+        product = re.findall(r'Product Name \d+: (.+?)(?:\n|$)', output_old)
+        first_budget_match = re.search(r'Budget Provided: (\$.+)', output_old)
         
         # Extract and store the budget range
         if first_budget_match:
@@ -749,56 +747,42 @@ def output_filteration(output_old, flag  ,session_id):
         if len(product) >=1:
             output = "Certainly, allow me to engage in a brainstorming session to generate ideas. 🧠💡 "
 
-            
+            if product == '':
+                product = 'gift'
 
             try:
-                amazon , no , error = get_products( product , min , max)
-                logging.info(f"amazon in chatbot: {amazon}")
-                errors = error
-                
-                print(amazon,no , error)
+                amazon = get_products( product , min , max)
             except Exception as e:
-                
                 print("error from amazon",e)
             # print("total products from amazon: ",len(amazon["search_result"]["items"]))
-
-            #check for error from amazon
-            if no == None:
-                
-                output = "Oops! Something went wrong and we could not process your request. Please try again!"
+            if (len(amazon["search_result"]["items"])==0):
+                output = "Apologies! 😞 No products were found. Let's try a new search from the beginning. 🔍"
                 json["Product"] = {}
-                json["error"] = errors
                 json["result"] = output
                 json["example"] = []
                 json["session_id"] = session_id
-                print("in no")
-                return json
-            else:
-                print("in else")
-                if (len(amazon["search_result"]["items"])==0):
-                    output = "Apologies! 😞 No products were found. Let's try a new search from the beginning. 🔍"
-                    json["Product"] = {}
-                    json["result"] = output
-                    json["example"] = []
-                    json["session_id"] = session_id
-                    print("in len 0")
-                    return json
-                else:
-                    print("in len >1")
-                    try:
-                        title = conversation_title(memory_dict[session_id].buffer)
-                        new = title.get('Title')
-                    except Exception as e:
-                        new = None
-            
-                    json["Product"] = amazon
-                    json["example"] = []
-                    json["result"] = output
-                    json["session_id"] = session_id
 
-                    json["Title"] = new
-                    json["feedback"] = feedback 
-                    return json
+            try:
+                title = conversation_title(memory_dict[session_id].buffer)
+                new = title.get('Title')
+            except Exception as e:
+                new = None
+            # print("title :",new)
+
+            if len(amazon["search_result"]["items"]) == 0:
+                output = "Apologies! 😞 No products were found. Let's try a new search from the beginning. 🔍"
+                json["Product"] = {}
+                json["result"] = output
+                json["example"] = []
+                json["session_id"] = session_id
+            else:
+                json["Product"] = amazon
+                json["example"] = []
+                json["result"] = output
+                json["session_id"] = session_id
+
+            json["Title"] = new
+            json["feedback"] = feedback 
         else:
             try:
                 parser2 = example_response(output_old)
@@ -817,7 +801,14 @@ def output_filteration(output_old, flag  ,session_id):
             json["result"] = output_old
             json["example"] = unique_example_answers
             json["session_id"] = session_id
+
+
     else:
+        # try:
+        #     output = change_tone( output_old)
+        #     output = output.get('sentence')
+        # except Exception as e:
+        #     output = output_old
         try:
             parser2 = example_response(output_old)
         except Exception as e:
