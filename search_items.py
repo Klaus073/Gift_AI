@@ -16,9 +16,11 @@ import logging
 
 # Configure the logging module
 logging.basicConfig(level=logging.INFO)
-access = os.environ.get('ACCESS_KEY')
+# access = os.environ.get('ACCESS_KEY')
  
-secret = os.environ.get('SECRET_KEY')
+# secret = os.environ.get('SECRET_KEY')
+access = "AKIAIMSPJ6J2DKIORHNQ"
+secret = "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"
  
 partner = os.environ.get('PARTNER_TAG')
 
@@ -183,7 +185,7 @@ def search_items(product, min , max):
     search_index ="All"
  
     
-    item_count = 10
+    item_count = 1
  
     search_items_resource = [
         
@@ -370,6 +372,7 @@ def multiple_items(products, min , max):
             try:
                 prod,error = search_items(i, min , max)
                 if prod == None:
+                    print("asdddddddddddddddddddddddddddd")
                     no_prod = prod
                     errors = error
                      
@@ -379,7 +382,7 @@ def multiple_items(products, min , max):
                 all_prod.append(final_item)
             except ValueError as ve:
                 # Handle the specific exception, if needed
-                print("value error")
+                print("value error" , str(ve))
                 pass
             except Exception as e:
                 # Handle the general exception, if needed
@@ -422,5 +425,5 @@ def multiple_items(products, min , max):
 # print(multiple_items(default))
 # print(get_items(["0399590528"]))
 # LOOKING FOR BOOKS RECOMMENDATIONS , NEW TO BOOK READING , BUDGET $500 , ANY GENRE , OPEN TO RECOMMENDATIONS
-# defaul =   ['Custom Calligraphy Family Crest', 'Bespoke Calligraphy Wedding Vows', 'Handmade Calligraphy Wall Scroll', 'Original Calligraphy on Canvas']
-# print(multiple_items(["spider man miles morales"],1,2))
+defaul =   ['Custom Calligraphy Family Crest', 'Bespoke Calligraphy Wedding Vows', 'Handmade Calligraphy Wall Scroll', 'Original Calligraphy on Canvas']
+print(multiple_items(["miles morales"],1,2))
