@@ -21,9 +21,8 @@ import concurrent.futures
 access = os.environ.get('ACCESS_KEY')
  
 secret = os.environ.get('SECRET_KEY')
-# access = "AKIAIMSPJ6J2DKIORHNQ"
-# secret = "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"
-# print(access , secret)
+
+print(access , secret)
  
 partner = os.environ.get('PARTNER_TAG')
 
