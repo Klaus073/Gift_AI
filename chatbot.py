@@ -860,25 +860,25 @@ def main_input(user_input, user_session_id):
 # for i in range(5):
 #     inp = input()
 #     print(main_input(inp,"0"))
-tt = """
+# tt = """
 
-- Product Name 1: Creed Aventus Eau de Parfum
-- Budget Provided: $200
-- Product Name 2: Tom Ford Noir Extreme
-- Budget Provided: $200
-- Product Name 3: Acqua Di Gio Profumo by Giorgio Armani
-- Budget Provided: $200
-- Product Name 4: Bvlgari Man in Black Eau de Parfum
-- Budget Provided: $200
-- Product Name 5: Montblanc Explorer Eau de Parfum
-- Budget Provided: $200
-- Product Name 6: Viktor&Rolf Spicebomb Extreme Eau de Parfum
-- Budget Provided: $200
-- Product Name 7: Dior Sauvage Eau de Toilette
-- Budget Provided: $200
-- Product Name 8: Versace Eros Flame Eau de Parfum
-- Budget Provided: $200
+# - Product Name 1: Creed Aventus Eau de Parfum
+# - Budget Provided: $200
+# - Product Name 2: Tom Ford Noir Extreme
+# - Budget Provided: $200
+# - Product Name 3: Acqua Di Gio Profumo by Giorgio Armani
+# - Budget Provided: $200
+# - Product Name 4: Bvlgari Man in Black Eau de Parfum
+# - Budget Provided: $200
+# - Product Name 5: Montblanc Explorer Eau de Parfum
+# - Budget Provided: $200
+# - Product Name 6: Viktor&Rolf Spicebomb Extreme Eau de Parfum
+# - Budget Provided: $200
+# - Product Name 7: Dior Sauvage Eau de Toilette
+# - Budget Provided: $200
+# - Product Name 8: Versace Eros Flame Eau de Parfum
+# - Budget Provided: $200
 
-Do any of these catch your eye for your brother's birthday gift? 🎁✨
-"""
+# Do any of these catch your eye for your brother's birthday gift? 🎁✨
+# """
 # print(output_filteration(tt , "True" , "0"))
