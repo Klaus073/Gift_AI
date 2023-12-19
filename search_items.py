@@ -12,7 +12,10 @@ import random
 import json
 import concurrent.futures
 
+import logging
 
+# Configure the logging module
+logging.basicConfig(level=logging.INFO)
 # import logging
 
 # # Configure the logging module
@@ -219,6 +222,7 @@ def search_items(product, min , max):
         # NOTE - Check if response exists in cache, return if it does otherwise send request to paapi
         thread = default_api.search_items(search_items_request, async_req=True)
         response = thread.get()
+        logging.info(f"paapi response ", response)
         # response = get_cached_response(search_items_request, default_api.search_items)
         # print(response)
         # logging.info(f"Partner Tag Key: {response}")
@@ -244,6 +248,7 @@ def search_items(product, min , max):
                     return
                 try:
                      response = default_api.search_items(search_items_request)
+                     logging.info(f"paapi response ", response)
                     #  logging.info(f"Partner Tag Key: {response}")
                 except ValueError as exception:
                     print("Error in forming SearchItemsRequest: ", exception)
