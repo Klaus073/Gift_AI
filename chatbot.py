@@ -834,6 +834,7 @@ def main_input(user_input, user_session_id):
     # output = initial_chat(user_input, session_memory )
     try:
         output = initial_chat(user_input, session_memory )
+        # print(output)
     except Exception as e:
         output = {"error": "Something Went Wrong ...." , "code": "500"}
         return output

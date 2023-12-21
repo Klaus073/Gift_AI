@@ -9,13 +9,11 @@ from paapi5_python_sdk.models.condition import Condition
 import time
 import os
 import random
+from datetime import datetime
 import json
 import concurrent.futures
 
-import logging
 
-# Configure the logging module
-logging.basicConfig(level=logging.INFO)
 # import logging
 
 # # Configure the logging module
@@ -220,9 +218,15 @@ def search_items(product, min , max):
  
         """ Sending request """
         # NOTE - Check if response exists in cache, return if it does otherwise send request to paapi
+        
         thread = default_api.search_items(search_items_request, async_req=True)
+
+        time.sleep(1)
+        # print("calling title endpoint")
         response = thread.get()
-        logging.info(f"paapi response ", response)
+        # print("got response title endpoint")
+        start_time = datetime.now()
+        # print("start time in search items function: ",start_time)
         # response = get_cached_response(search_items_request, default_api.search_items)
         # print(response)
         # logging.info(f"Partner Tag Key: {response}")
@@ -232,7 +236,7 @@ def search_items(product, min , max):
             print("Error message", response.errors[0].message)
             if  response.errors[0].code=="NoResults":
                 # print("here")
-                time.sleep(1)
+                # time.sleep(1)
                 try:
                     search_items_request = SearchItemsRequest(
             
@@ -247,12 +251,32 @@ def search_items(product, min , max):
                     print("Error in forming SearchItemsRequest: ", exception)
                     return
                 try:
-                     response = default_api.search_items(search_items_request)
-                     logging.info(f"paapi response ", response)
+                    end_time = datetime.now()
+                    print("end time in search items function in keywords search: ",end_time)
+                    execution_time = (end_time - start_time).total_seconds()
+                    if execution_time < 1:
+                        delay = 1 - execution_time
+                        time.sleep(delay)
+                        # print("delay in search function in keywords search")
+                    # print("in keyword")
+                    # print(f"Execution time: {execution_time} seconds")
+                    # print("calling keyword endpoint")
+                    response = default_api.search_items(search_items_request)
+                    # print("got response from keyword endpoint")
+                    # start_time = datetime.now()
+                    # print("start time in search items function in keywords search: ",start_time)
                     #  logging.info(f"Partner Tag Key: {response}")
                 except ValueError as exception:
                     print("Error in forming SearchItemsRequest: ", exception)
                     return
+        # end_time = datetime.now()
+        # print("end time in search items function: ",end_time)
+        # execution_time = (end_time - start_time).total_seconds()
+        # if execution_time < 1:
+        #     delay = 1 - execution_time
+        #     time.sleep(delay)
+        #     print("delay in search function")
+        
 
  
     except ApiException as exception:
@@ -342,21 +366,42 @@ def remove_duplicates(products):
 
 def multiple_items(products, min , max):
     all_prod = []
-    
+    a = 0
+    start = datetime.now()
     if isinstance(products, list):
         for i in products:
+            a +=1
             try:
-                final_item = get_item_with_lowest_sales_rank(filter_products(simplify_json(search_items(i, min , max))))
+                # if a== 1:
+                #     pass
+                # else:
+                #     end_time = time.time()
+                #     print("end time", )
+
+                
+                search_result = search_items(i, min , max)
+                # start_time = time.time()
+                final_item = get_item_with_lowest_sales_rank(filter_products(simplify_json(search_result)))
+                # start_time = time.time()
+                # execution_time = end_time - start_time
+                # print(f"Execution time in main function: {execution_time} seconds")
                 all_prod.append(final_item)
+                # if execution_time < 1:
+                #     print("got here")
+                #     delay  = 1- execution_time
+                #     time.sleep(delay)
+                #     print("in delay: ",delay)
             except ValueError as ve:
                 # Handle the specific exception, if needed
                 print("value error")
-                pass
+                continue
             except Exception as e:
                 # Handle the general exception, if needed
                 print("ee |",str(e))
-                pass
-
+                continue
+        end = datetime.now()
+        execution_time = (end - start).total_seconds()
+        # print(f"Execution time for all products: {execution_time} seconds")
     # Replicate products randomly and shuffle if the length is not 6
     # while len(all_prod) < 6:
     #     random_product = random.choice(all_prod)
@@ -364,7 +409,9 @@ def multiple_items(products, min , max):
 
     # # Shuffle the list
     # random.shuffle(all_prod)
+    # print("before dupli: ",len(all_prod))
     unique_products_list = remove_duplicates(all_prod)
+    # print("after dupli: ",len(unique_products_list))
     if len(unique_products_list)>6:
         six_prod = unique_products_list[:6]
     else:
