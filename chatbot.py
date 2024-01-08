@@ -8,6 +8,7 @@ from langchain.prompts import (
 )
 import re
 import string
+from token_cost_count import tokens_cost_count
 from langchain.callbacks import get_openai_callback
 from token_stats_db import insert_global_token_stats
 from langchain.chains import LLMChain
@@ -169,13 +170,14 @@ def initial_chat(user_input, session_memory):
         "successful_requests": cb.successful_requests,
         "total_cost_usd": cb.total_cost,
     }
+    cost = tokens_cost_count(cb.prompt_tokens , cb.completion_tokens)
  
  
     # Update global token stats
     # for key in global_token_stats:
     #     global_token_stats[key] += token_info[key]
     # insert_global_token_stats(token_info)
-    return session_memory.buffer[-1].content
+    return session_memory.buffer[-1].content , cost
 
 
 def question_or_recommendation(ai_response):
@@ -475,7 +477,7 @@ Question: {ai_response}
         "successful_requests": cb.successful_requests,
         "total_cost_usd": cb.total_cost,
     }
- 
+    cost = tokens_cost_count(cb.prompt_tokens , cb.completion_tokens)
  
     # Update global token stats
     # Update global token stats
@@ -484,7 +486,7 @@ Question: {ai_response}
     attr = output_parser.parse(result.content)
     # insert_global_token_stats(token_info)
  
-    return attr
+    return attr , cost
  
 def change_tone( ai_input):
     global COUNTER  # Add this line if you want to modify the global variable
@@ -597,6 +599,8 @@ def conversation_title( conversation):
         "successful_requests": cb.successful_requests,
         "total_cost_usd": cb.total_cost,
     }
+    
+    cost = tokens_cost_count(cb.prompt_tokens , cb.completion_tokens)
  
  
     # Update global token stats
@@ -606,7 +610,7 @@ def conversation_title( conversation):
     title = output_parser.parse(result.content)
     # insert_global_token_stats(token_info)
  
-    return title
+    return title , cost
  
  
 # sub_categories =['Kindle Kids', 'Kindle Paperwhite', 'Kindle Oasis', 'Kindle Books', 'Camera & Photo', 'Headphones', 'Video Game Consoles & Accessories', 'Wearable Technology', 'Cell Phones & Accessories', 'Computer Accessories & Peripherals', 'Monitors', 'Laptop Accessories', 'Data Storage', 'Amazon Smart Home', 'Smart Home Lighting', 'Smart Locks and Entry', 'Security Cameras and Systems', 'Painting, Drawing & Art Supplies', 'Beading & Jewelry Making', 'Crafting', 'Sewing', 'Car Care', 'Car Electronics & Accessories', 'Exterior Accessories', 'Interior Accessories', 'Motorcycle & Powersports', 'Activity & Entertainment', 'Apparel & Accessories', 'Baby & Toddler Toys', 'Nursery', 'Travel Gear', 'Makeup', 'Skin Care', 'Hair Care', 'Fragrance', 'Foot, Hand & Nail Care', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Handbags', 'Clothing', 'Shoes', 'Watches', 'Accessories', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Handbags', 'Clothing', 'Shoes', 'Jewelry', 'Watches', 'Health Care', 'Household Supplies', 'Vitamins & Dietary Supplements', 'Wellness & Relaxation', 'Kitchen & Dining', 'Bedding', 'Bath', 'Furniture', 'Home Décor', 'Wall Art', 'Carry-ons', 'Backpacks', 'Garment bags', 'Travel Totes', 'Dogs', 'Cats', 'Fish & Aquatic Pets', 'Birds', 'Sports and Outdoors', 'Outdoor Recreation', 'Sports & Fitness', 'Tools & Home Improvement', 'Appliances', 'Building Supplies', 'Electrical', 'Action Figures & Statues', 'Arts & Crafts', 'Baby & Toddler Toys', 'Building Toys', 'Video Games', 'PlayStation', 'Xbox', 'Nintendo', 'PC', 'All gift cards', 'eGift cards', 'Gift cards by mail', 'Specialty gift cards']
@@ -707,7 +711,10 @@ def extract_budget_range(budget_string):
     return min_value, max_value
  
 search_indexes = [ "AmazonVideo", "Apparel", "Appliances", "ArtsAndCrafts", "Automotive", "Baby", "Beauty", "Books", "Classical", "Collectibles", "Computers", "DigitalMusic", "DigitalEducationalResources", "Electronics", "EverythingElse", "Fashion", "FashionBaby", "FashionBoys", "FashionGirls", "FashionMen", "FashionWomen", "GardenAndOutdoor", "GiftCards", "GroceryAndGourmetFood", "Handmade", "HealthPersonalCare", "HomeAndKitchen", "Industrial", "Jewelry", "KindleStore", "LocalServices", "Luggage", "LuxuryBeauty", "Magazines", "MobileAndAccessories", "MobileApps", "MoviesAndTV", "Music", "MusicalInstruments", "OfficeProducts", "PetSupplies", "Photo", "Shoes", "Software", "SportsAndOutdoors", "ToolsAndHomeImprovement", "ToysAndGames", "VHS", "VideoGames", "Watches"]
-def output_filteration(output_old, flag  ,session_id):
+
+def output_filteration(output_old, flag  ,session_id , cost_llm_message):
+    cost = 0
+    cost= cost + cost_llm_message
     json = {}
    
     if flag == "True" or flag == "true" or flag == True:
@@ -759,7 +766,9 @@ def output_filteration(output_old, flag  ,session_id):
                 json["session_id"] = session_id
 
             try:
-                title = conversation_title(memory_dict[session_id].buffer)
+                title,cost2 = conversation_title(memory_dict[session_id].buffer)
+                cost= cost + cost2
+                # insert_global_token_stats(cost2,session_id)
                 new = title.get('Title')
             except Exception as e:
                 new = None
@@ -779,9 +788,12 @@ def output_filteration(output_old, flag  ,session_id):
 
             json["Title"] = new
             json["feedback"] = feedback 
+            # json["cost"]= cost_title + cost_llm_message
         else:
             try:
-                parser2 = example_response(output_old)
+                parser2,cost1 = example_response(output_old)
+                # insert_global_token_stats(cost1,session_id)
+                cost= cost + cost1
             except Exception as e:
                 print("here", str(e))
                 parser2 = {"example": ['']}
@@ -797,6 +809,7 @@ def output_filteration(output_old, flag  ,session_id):
             json["result"] = output_old
             json["example"] = unique_example_answers
             json["session_id"] = session_id
+            # json["cost"]= cost_example + cost_llm_message
 
 
     else:
@@ -806,7 +819,9 @@ def output_filteration(output_old, flag  ,session_id):
         # except Exception as e:
         #     output = output_old
         try:
-            parser2 = example_response(output_old)
+            parser2,cost1 = example_response(output_old)
+            # insert_global_token_stats(cost1,session_id)
+            cost= cost + cost1
         except Exception as e:
             print("here", str(e))
             parser2 = {"example": ['']}
@@ -824,16 +839,18 @@ def output_filteration(output_old, flag  ,session_id):
         json["result"] = output_old
         json["example"] = unique_example_answers
         json["session_id"] = session_id
+        # json["cost"]= cost_example + cost_llm_message
         # print(memory_dict[session_id].buffer)
     
- 
-    return json
+    
+    return json,cost
  
 def main_input(user_input, user_session_id):
     session_memory = get_or_create_memory_for_session(user_session_id)
     # output = initial_chat(user_input, session_memory )
     try:
-        output = initial_chat(user_input, session_memory )
+        output , cost = initial_chat(user_input, session_memory )
+        # insert_global_token_stats(cost,user_session_id)
         # print(output)
     except Exception as e:
         output = {"error": "Something Went Wrong ...." , "code": "500"}
@@ -854,7 +871,8 @@ def main_input(user_input, user_session_id):
         gflag = "False"
         # print("main flag",gflag)
  
-    final_output = output_filteration( output, gflag, user_session_id)
+    final_output,final_cost = output_filteration( output, gflag, user_session_id, cost)
+    insert_global_token_stats(final_cost,user_session_id)
  
     return final_output
 
