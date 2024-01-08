@@ -840,7 +840,7 @@ def output_filteration(output_old, flag  ,session_id , cost_llm_message):
         json["example"] = unique_example_answers
         json["session_id"] = session_id
         # json["cost"]= cost_example + cost_llm_message
-        # print(memory_dict[session_id].buffer)
+        
     
     
     return json,cost
